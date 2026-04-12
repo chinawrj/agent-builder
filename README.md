@@ -1,10 +1,12 @@
 # Agent Builder
 
-一个用于构建项目开发 Agent 的元项目（Meta-project）。
+[中文版](README_zh.md)
 
-Agent Builder 本身不包含任何实际代码项目。它是一个 **skill 库 + agent 生成器**，通过与用户对话收集需求，然后生成一套完整的 AI agent 项目文件，帮助 AI 自主开发用户的目标项目。
+A meta-project for building AI development agents.
 
-## 核心概念
+Agent Builder contains no actual project code. It is a **skill library + agent generator** that collects requirements through conversation, then generates a complete set of AI agent project files to help AI autonomously develop the user's target project.
+
+## Core Concept
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -18,126 +20,128 @@ Agent Builder 本身不包含任何实际代码项目。它是一个 **skill 库
 └───────┼───────────────┼───────────────────┼─────────────┘
         │               │                   │
         ▼               ▼                   ▼
-  可复用技能       用户需求收集        生成目标 Agent 项目
-  (tmux, CDP,     (对话式确认         (workflow agent +
-   ESP32, ...)     目标/指标)          skills + 需求文档)
+  Reusable Skills   Requirement        Generate Target
+  (tmux, CDP,       Collection         Agent Project
+   ESP32, ...)      (interactive)      (workflow agent +
+                                        skills + docs)
 ```
 
-## 目录结构
+## Directory Structure
 
 ```
 agent-builder/
-├── README.md
+├── README.md                        # English README
+├── README_zh.md                     # Chinese README
 ├── .github/
-│   └── copilot-instructions.md     # 仓库级 AI 指令
+│   └── copilot-instructions.md     # Repo-level AI instructions
 ├── agents/
-│   ├── builder.agent.md            # Builder 主 Agent 定义
-│   ├── iterator.agent.md           # 功能迭代 Agent
-│   └── skill-tester.agent.md       # Skill 测试 Agent
-├── skills/                          # 可复用 Skill 库
-│   ├── tmux-multi-shell/           # tmux 多终端管理
-│   ├── cdp-web-inspector/          # CDP 浏览器检查工具
-│   ├── esp32-serial-tools/         # ESP32 串口工具
-│   ├── esp32-build-flash/          # ESP32 编译烧录
-│   ├── daily-iteration/            # 每日迭代工作流
-│   ├── automated-testing/          # 自动化测试框架
-│   ├── code-refactoring/           # 代码重构策略
-│   ├── web-page-inspector/         # Web 页面检查与数据抓取
-│   ├── environment-setup/          # 开发环境检查与配置
-│   └── project-scaffolding/        # 项目脚手架生成
-├── templates/                       # 生成模板
-│   ├── workflow-agent.agent.md     # 工作流 Agent 模板
-│   ├── requirements.md             # 需求文档模板
-│   └── daily-plan.md              # 每日计划模板
-├── builder/                         # 构建引擎
-│   ├── __init__.py                 # 公共 API 导出
-│   ├── build.py                    # CLI 入口
-│   └── config.py                   # 项目配置 schema
+│   ├── builder.agent.md            # Builder main agent
+│   ├── iterator.agent.md           # Feature iteration agent
+│   └── skill-tester.agent.md       # Skill testing agent
+├── skills/                          # Reusable skill library
+│   ├── tmux-multi-shell/           # tmux multi-terminal management
+│   ├── cdp-web-inspector/          # CDP browser inspection tools
+│   ├── esp32-serial-tools/         # ESP32 serial tools
+│   ├── esp32-build-flash/          # ESP32 build & flash
+│   ├── daily-iteration/            # Daily iteration workflow
+│   ├── automated-testing/          # Automated testing framework
+│   ├── code-refactoring/           # Code refactoring strategies
+│   ├── web-page-inspector/         # Web page inspection & scraping
+│   ├── environment-setup/          # Dev environment setup & check
+│   └── project-scaffolding/        # Project scaffolding generator
+├── templates/                       # Generation templates
+│   ├── workflow-agent.agent.md     # Workflow agent template
+│   ├── requirements.md             # Requirements doc template
+│   └── daily-plan.md              # Daily plan template
+├── builder/                         # Builder engine
+│   ├── __init__.py                 # Public API exports
+│   ├── build.py                    # CLI entry point
+│   └── config.py                   # Project config schema
 ├── docs/
-│   └── SKILL_DEVELOPMENT.md        # Skill 开发指南
+│   └── SKILL_DEVELOPMENT.md        # Skill development guide
 ├── prompts/
 │   └── gather-requirements.prompt.md
 └── examples/
-    └── esp32-cam/                  # 示例：ESP-CAM 项目输出
+    └── esp32-cam/                  # Example: ESP-CAM project output
 ```
 
-## 使用方式
+## Usage
 
-### 交互模式（推荐）
+### Interactive Mode (Recommended)
 
-在 VS Code 中打开此项目，使用 `@builder` agent 与 AI 对话：
+Open this project in VS Code and chat with the `@builder` agent:
 
 ```
-@builder 我想做一个 ESP-CAM 项目，需要通过浏览器实时查看摄像头画面，
-并显示温度/湿度传感器数据
+@builder I want to build an ESP-CAM project that streams live camera
+feed to a browser and displays temperature/humidity sensor data
 ```
 
-Builder Agent 会：
-1. 确认项目目标、技术栈、验收指标
-2. 选择适用的 skills
-3. 在指定目录生成完整的 agent 项目
+The Builder Agent will:
+1. Confirm project goals, tech stack, and acceptance criteria
+2. Select applicable skills
+3. Generate a complete agent project in the specified directory
 
-### CLI 模式
+### CLI Mode
 
 ```bash
-# 列出所有可用 skills
+# List all available skills
 python -m builder.build --list-skills
 
-# 预览生成内容（不写入文件）
+# Preview generated content (dry run, no files written)
 python -m builder.build \
   --config examples/esp32-cam/project-config.yaml \
   --output /path/to/output --dry-run
 
-# 正式生成
+# Generate for real
 python -m builder.build \
   --config examples/esp32-cam/project-config.yaml \
   --output /path/to/target-project/.copilot
 ```
 
-## 生成内容
+## Generated Output
 
-Builder 生成的 agent 项目包含：
+The builder generates an agent project containing:
 
-| 文件 | 用途 |
-|------|------|
-| `workflow-agent.agent.md` | 工作流 Agent，驱动每日迭代开发 |
-| `requirements.md` | 项目需求与验收指标 |
-| `daily-plan.md` | 每日工作计划模板 |
-| `skills/` | 根据需求选择的 skill 文件 |
+| File | Purpose |
+|------|---------|
+| `workflow-agent.agent.md` | Workflow agent that drives daily iterative development |
+| `requirements.md` | Project requirements and acceptance criteria |
+| `daily-plan.md` | Daily work plan template |
+| `skills/` | Selected skill files based on requirements |
 
 ## Agents
 
-| Agent | 用途 | 调用方式 |
-|-------|------|----------|
-| `builder` | 通过对话收集需求，生成项目 agent 文件 | `@builder` |
-| `iterator` | 审查项目现状，发现改进点，实施迭代优化 | `@iterator` |
-| `skill-tester` | 批量执行 Self-Test / Blind Test，生成测试报告 | `@skill-tester` |
+| Agent | Purpose | Invocation |
+|-------|---------|------------|
+| `builder` | Collect requirements via conversation, generate agent files | `@builder` |
+| `iterator` | Review project status, discover improvements, implement iterations | `@iterator` |
+| `skill-tester` | Batch execute Self-Test / Blind Test, generate test reports | `@skill-tester` |
 
-## Skills 清单
+## Skills Catalog
 
-每个 Skill 都包含 **Self-Test（自检）** 和 **Blind Test（盲测）**，确保质量和可用性。
+Every skill includes **Self-Test** and **Blind Test** to ensure quality and usability.
 
-| Skill | 描述 | 分类 |
-|-------|------|------|
-| `tmux-multi-shell` | tmux 多窗口管理（编译/烧录/串口监控） | dev-tools |
-| `cdp-web-inspector` | Chrome DevTools Protocol 浏览器自动化 | web-tools |
-| `esp32-serial-tools` | ESP32 串口通信与日志监控 | hardware |
-| `esp32-build-flash` | ESP-IDF 编译与烧录工作流 | hardware |
-| `daily-iteration` | 每日迭代计划与执行 | workflow |
-| `automated-testing` | 自动化测试（串口验证 + Web UI 验证） | quality |
-| `code-refactoring` | 周期性代码重构策略 | quality |
-| `web-page-inspector` | Web 页面内容检查与数据提取 | web-tools |
-| `environment-setup` | 开发环境检查与配置（工具链、驱动、依赖） | dev-tools |
-| `project-scaffolding` | 项目脚手架生成（目录结构、CMake、HTML 模板） | workflow |
+| Skill | Description | Category |
+|-------|-------------|----------|
+| `tmux-multi-shell` | tmux multi-window management (build/flash/serial monitor) | dev-tools |
+| `cdp-web-inspector` | Chrome DevTools Protocol browser automation | web-tools |
+| `esp32-serial-tools` | ESP32 serial communication & log monitoring | hardware |
+| `esp32-build-flash` | ESP-IDF build & flash workflow | hardware |
+| `daily-iteration` | Daily iteration planning & execution | workflow |
+| `automated-testing` | Automated testing (serial validation + Web UI verification) | quality |
+| `code-refactoring` | Periodic code refactoring strategies | quality |
+| `web-page-inspector` | Web page content inspection & data extraction | web-tools |
+| `environment-setup` | Dev environment check & configuration (toolchains, drivers, deps) | dev-tools |
+| `project-scaffolding` | Project scaffolding (directory structure, CMake, HTML templates) | workflow |
 
-## Skill 质量保证
+## Skill Quality Assurance
 
-每个 Skill 必须包含两层测试：
+Every skill must include two layers of testing:
 
-- **Self-Test**: 可自动执行的验证，输出 `SELF_TEST_PASS` / `SELF_TEST_FAIL`
-- **Blind Test**: 模拟 AI 首次使用的场景测试（Prompt + 验收标准）
+- **Self-Test**: Automatically executable validation, outputs `SELF_TEST_PASS` / `SELF_TEST_FAIL`
+- **Blind Test**: Simulated first-use scenario test (Prompt + acceptance criteria)
 
-详见 [`docs/SKILL_DEVELOPMENT.md`](docs/SKILL_DEVELOPMENT.md)。
+See [`docs/SKILL_DEVELOPMENT.md`](docs/SKILL_DEVELOPMENT.md) for details.
 
 ## License
 
