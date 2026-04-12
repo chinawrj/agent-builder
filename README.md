@@ -31,7 +31,9 @@ agent-builder/
 ├── .github/
 │   └── copilot-instructions.md     # 仓库级 AI 指令
 ├── agents/
-│   └── builder.agent.md            # Builder 主 Agent 定义
+│   ├── builder.agent.md            # Builder 主 Agent 定义
+│   ├── iterator.agent.md           # 功能迭代 Agent
+│   └── skill-tester.agent.md       # Skill 测试 Agent
 ├── skills/                          # 可复用 Skill 库
 │   ├── tmux-multi-shell/           # tmux 多终端管理
 │   ├── cdp-web-inspector/          # CDP 浏览器检查工具
@@ -102,6 +104,14 @@ Builder 生成的 agent 项目包含：
 | `requirements.md` | 项目需求与验收指标 |
 | `daily-plan.md` | 每日工作计划模板 |
 | `skills/` | 根据需求选择的 skill 文件 |
+
+## Agents
+
+| Agent | 用途 | 调用方式 |
+|-------|------|----------|
+| `builder` | 通过对话收集需求，生成项目 agent 文件 | `@builder` |
+| `iterator` | 审查项目现状，发现改进点，实施迭代优化 | `@iterator` |
+| `skill-tester` | 批量执行 Self-Test / Blind Test，生成测试报告 | `@skill-tester` |
 
 ## Skills 清单
 

@@ -1,5 +1,8 @@
 ---
 description: "Agent Builder - 通过对话收集用户需求，生成项目专属的 AI agent 文件集合"
+agents:
+  - iterator
+  - skill-tester
 ---
 
 # Builder Agent
