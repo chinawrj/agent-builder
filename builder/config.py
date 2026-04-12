@@ -1,6 +1,12 @@
 """项目配置 Schema"""
 
+import os
 from dataclasses import dataclass, field
+
+# Agent Builder 版本
+VERSION = "0.2.0"
+
+REQUIRED_FIELDS = {"name", "description", "target_hardware"}
 
 
 @dataclass
@@ -31,14 +37,44 @@ class ProjectConfig:
     # 输出目录
     output_dir: str = ""
 
+    def validate(self):
+        """验证配置完整性"""
+        missing = {f for f in REQUIRED_FIELDS if not getattr(self, f, "")}
+        if missing:
+            raise ValueError(f"缺少必填字段: {', '.join(sorted(missing))}")
+
+        # 验证 skills 是否在目录中
+        if self.skills:
+            unknown = set(self.skills) - set(SKILL_CATALOG.keys())
+            if unknown:
+                raise ValueError(f"未知的 skill: {', '.join(sorted(unknown))}")
+
+        # 验证 milestones 格式
+        for i, m in enumerate(self.milestones):
+            if not isinstance(m, dict):
+                raise ValueError(f"里程碑 {i+1} 格式错误，应为 dict")
+
     @classmethod
     def from_yaml(cls, path: str) -> "ProjectConfig":
         """从 YAML 文件加载配置"""
         import yaml
 
+        if not os.path.isfile(path):
+            raise FileNotFoundError(f"配置文件不存在: {path}")
+
         with open(path) as f:
             data = yaml.safe_load(f)
-        return cls(**data)
+
+        if not data or not isinstance(data, dict):
+            raise ValueError(f"配置文件为空或格式错误: {path}")
+
+        # 过滤掉不属于 ProjectConfig 的字段
+        valid_fields = {f.name for f in cls.__dataclass_fields__.values()}
+        filtered = {k: v for k, v in data.items() if k in valid_fields}
+
+        config = cls(**filtered)
+        config.validate()
+        return config
 
     def to_yaml(self, path: str):
         """保存配置到 YAML 文件"""
@@ -91,16 +127,29 @@ SKILL_CATALOG = {
         "description": "Web 页面内容检查与数据提取",
         "tags": ["web", "scraping", "inspection"],
     },
+    "environment-setup": {
+        "category": "dev-tools",
+        "description": "开发环境检查与配置（工具链、驱动、依赖）",
+        "tags": ["setup", "environment", "verification"],
+    },
+    "project-scaffolding": {
+        "category": "workflow",
+        "description": "项目脚手架生成（目录结构、CMake、HTML 模板）",
+        "tags": ["scaffold", "template", "init"],
+    },
 }
 
 
 def recommend_skills(config: ProjectConfig) -> list[str]:
     """根据项目配置推荐 skills"""
-    recommended = []
+    recommended = ["environment-setup"]  # 环境检查总是需要
 
     # 嵌入式项目基础 skills
     if config.target_hardware.startswith("esp32"):
-        recommended.extend(["tmux-multi-shell", "esp32-build-flash", "esp32-serial-tools"])
+        recommended.extend([
+            "tmux-multi-shell", "esp32-build-flash", "esp32-serial-tools",
+            "project-scaffolding",
+        ])
 
     # Web UI 相关
     has_web = any(

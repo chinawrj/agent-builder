@@ -84,6 +84,56 @@ tmux attach-session -t {{PROJECT_NAME}}
 tmux kill-session -t {{PROJECT_NAME}}
 ```
 
+## Self-Test（自检）
+
+> 验证 tmux 可用且会话管理功能正常。
+
+### 自检步骤
+
+```bash
+# Test 1: tmux 已安装
+command -v tmux &>/dev/null && echo "SELF_TEST_PASS: tmux_installed" || echo "SELF_TEST_FAIL: tmux_installed"
+
+# Test 2: 可以创建和销毁会话
+tmux new-session -d -s __test_session__ && \
+  tmux list-sessions | grep -q __test_session__ && \
+  tmux kill-session -t __test_session__ && \
+  echo "SELF_TEST_PASS: session_lifecycle" || echo "SELF_TEST_FAIL: session_lifecycle"
+
+# Test 3: 可以创建多窗口并发送命令
+tmux new-session -d -s __test_multi__ && \
+  tmux new-window -t __test_multi__ -n 'win2' && \
+  tmux send-keys -t __test_multi__:win2 'echo hello_from_tmux' C-m && \
+  sleep 1 && \
+  tmux capture-pane -t __test_multi__:win2 -p | grep -q hello_from_tmux && \
+  tmux kill-session -t __test_multi__ && \
+  echo "SELF_TEST_PASS: multi_window" || { tmux kill-session -t __test_multi__ 2>/dev/null; echo "SELF_TEST_FAIL: multi_window"; }
+```
+
+### 预期结果
+
+| 测试项 | 预期输出 | 失败影响 |
+|--------|---------|----------|
+| tmux_installed | `SELF_TEST_PASS` | 无法使用多窗口工作流 |
+| session_lifecycle | `SELF_TEST_PASS` | 会话管理异常 |
+| multi_window | `SELF_TEST_PASS` | 无法在后台执行编译/烧录 |
+
+### Blind Test（盲测）
+
+**测试 Prompt:**
+```
+你是一个 AI 开发助手。请阅读此 Skill，然后为一个名为 "myproject" 的项目
+创建 tmux 工作环境：4 个窗口（edit, build, flash, monitor）。
+在 build 窗口执行 "echo build-ok"，然后用 capture-pane 验证输出。
+最后清理会话。
+```
+
+**验收标准:**
+- [ ] Agent 创建了正确命名的会话和 4 个窗口
+- [ ] Agent 使用 send-keys 发送命令（而非直接执行）
+- [ ] Agent 使用 capture-pane 检查输出
+- [ ] Agent 在完成后清理了测试会话
+
 ## 成功标准
 
 - [ ] tmux 会话已创建，包含所有必要窗口

@@ -111,6 +111,73 @@ assert "°C" in temp_text, f"温度格式异常: {temp_text}"
 - **必须使用持久化上下文** (`launch_persistent_context`)
 - 不要设置自定义 user_agent
 - CDP 端口默认为 9222，确保不与其他服务冲突
+- **线程注意**: Patchright sync API 使用 greenlets（线程本地），不能跨线程调用 `page.evaluate()`
+- 如需在多线程中使用，应创建独立的 async CDP 连接，搭配 `asyncio.run_coroutine_threadsafe()`
+
+## Self-Test（自检）
+
+> 验证 Patchright 安装、浏览器驱动和 CDP 连接能力。
+
+### 自检步骤
+
+```bash
+# Test 1: Patchright 可导入
+python3 -c "from patchright.sync_api import sync_playwright; print('SELF_TEST_PASS: patchright_import')" 2>/dev/null || echo "SELF_TEST_FAIL: patchright_import"
+
+# Test 2: 浏览器驱动存在
+ls ~/Library/Caches/ms-playwright/chromium-* &>/dev/null && \
+  echo "SELF_TEST_PASS: chromium_driver" || echo "SELF_TEST_FAIL: chromium_driver"
+
+# Test 3: 可以启动浏览器（headless 模式快速验证）
+python3 -c "
+from patchright.sync_api import sync_playwright
+import tempfile, os
+pw = sync_playwright().start()
+ctx = pw.chromium.launch_persistent_context(
+    user_data_dir=tempfile.mkdtemp(),
+    channel='chrome',
+    headless=True,
+    no_viewport=True,
+)
+page = ctx.pages[0] if ctx.pages else ctx.new_page()
+page.goto('data:text/html,<h1>test</h1>')
+assert page.locator('h1').text_content() == 'test'
+ctx.close()
+pw.stop()
+print('SELF_TEST_PASS: browser_launch')
+" 2>/dev/null || echo "SELF_TEST_FAIL: browser_launch"
+```
+
+### 预期结果
+
+| 测试项 | 预期输出 | 失败影响 |
+|--------|---------|----------|
+| patchright_import | `SELF_TEST_PASS` | CDP 功能完全不可用 |
+| chromium_driver | `SELF_TEST_PASS` | 无法启动浏览器 |
+| browser_launch | `SELF_TEST_PASS` | 浏览器自动化失败 |
+
+### Blind Test（盲测）
+
+**测试 Prompt:**
+```
+你是一个 AI 开发助手。请阅读此 Skill，然后：
+1. 启动一个 Patchright 浏览器实例（headless 模式即可）
+2. 访问 https://example.com
+3. 提取页面标题和 <h1> 文本
+4. 截图保存到 /tmp/cdp-test.png
+5. 关闭浏览器
+报告每个步骤的结果。
+```
+
+**验收标准:**
+- [ ] Agent 使用 Patchright（而非 Playwright）
+- [ ] Agent 使用 `launch_persistent_context`（而非 `launch`）
+- [ ] Agent 成功提取页面内容
+- [ ] Agent 没有设置自定义 user_agent
+
+**常见失败模式:**
+- Agent 使用 `playwright` 而非 `patchright` → Skill 中需要更强调
+- Agent 使用 `browser.launch()` 而非 `launch_persistent_context` → 已在注意事项中标注
 
 ## 成功标准
 

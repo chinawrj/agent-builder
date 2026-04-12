@@ -140,6 +140,56 @@ docs/daily-logs/
 └── milestone-1-review.md
 ```
 
+## Self-Test（自检）
+
+> 验证每日迭代工作流的文档生成和跟踪机制。
+
+### 自检步骤
+
+```bash
+# Test 1: docs 目录可创建
+mkdir -p /tmp/__selftest_daily__/docs/daily-logs && \
+  echo "SELF_TEST_PASS: docs_dir" || echo "SELF_TEST_FAIL: docs_dir"
+
+# Test 2: Markdown 模板渲染
+cat > /tmp/__selftest_daily__/docs/daily-logs/day-001.md << 'PLAN'
+## Day 1 计划
+### 昨日回顾
+- 完成: 项目初始化
+### 今日目标
+1. [x] 搭建项目框架
+2. [ ] 实现 WiFi 连接
+### 验收检查点
+- [x] 编译通过
+PLAN
+grep -c '\[x\]' /tmp/__selftest_daily__/docs/daily-logs/day-001.md | \
+  xargs -I{} bash -c '[ {} -ge 1 ] && echo "SELF_TEST_PASS: plan_format" || echo "SELF_TEST_FAIL: plan_format"'
+
+# Test 3: Git 可用于提交跟踪
+command -v git &>/dev/null && echo "SELF_TEST_PASS: git_available" || echo "SELF_TEST_FAIL: git_available"
+
+rm -rf /tmp/__selftest_daily__
+```
+
+### Blind Test（盲测）
+
+**测试 Prompt:**
+```
+你是一个 AI 开发助手。请阅读此 Skill，然后为一个名为 "test-project" 的项目
+生成 Day 1 的完整工作计划文档，包含：
+- 晨会计划（3 个具体目标）
+- 执行记录模板
+- 晚间回顾模板
+项目目标是"搭建 ESP32 WiFi HTTP 服务器"。
+输出完整的 Markdown 文档。
+```
+
+**验收标准:**
+- [ ] Agent 生成了包含所有三个部分的文档
+- [ ] 目标是具体的、可执行的（而非模糊的）
+- [ ] 文档使用了 checkbox 格式
+- [ ] Agent 参考了 Skill 中的模板格式
+
 ## 成功标准
 
 - [ ] 每日计划和回顾文档已生成

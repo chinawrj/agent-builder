@@ -40,15 +40,19 @@ agent-builder/
 │   ├── daily-iteration/            # 每日迭代工作流
 │   ├── automated-testing/          # 自动化测试框架
 │   ├── code-refactoring/           # 代码重构策略
-│   └── web-page-inspector/         # Web 页面检查与数据抓取
+│   ├── web-page-inspector/         # Web 页面检查与数据抓取
+│   ├── environment-setup/          # 开发环境检查与配置
+│   └── project-scaffolding/        # 项目脚手架生成
 ├── templates/                       # 生成模板
 │   ├── workflow-agent.agent.md     # 工作流 Agent 模板
 │   ├── requirements.md             # 需求文档模板
 │   └── daily-plan.md              # 每日计划模板
 ├── builder/                         # 构建引擎
-│   ├── __init__.py
+│   ├── __init__.py                 # 公共 API 导出
 │   ├── build.py                    # CLI 入口
 │   └── config.py                   # 项目配置 schema
+├── docs/
+│   └── SKILL_DEVELOPMENT.md        # Skill 开发指南
 ├── prompts/
 │   └── gather-requirements.prompt.md
 └── examples/
@@ -74,6 +78,15 @@ Builder Agent 会：
 ### CLI 模式
 
 ```bash
+# 列出所有可用 skills
+python -m builder.build --list-skills
+
+# 预览生成内容（不写入文件）
+python -m builder.build \
+  --config examples/esp32-cam/project-config.yaml \
+  --output /path/to/output --dry-run
+
+# 正式生成
 python -m builder.build \
   --config examples/esp32-cam/project-config.yaml \
   --output /path/to/target-project/.copilot
@@ -92,16 +105,29 @@ Builder 生成的 agent 项目包含：
 
 ## Skills 清单
 
-| Skill | 描述 |
-|-------|------|
-| `tmux-multi-shell` | tmux 多窗口管理（编译/烧录/串口监控） |
-| `cdp-web-inspector` | Chrome DevTools Protocol 浏览器自动化 |
-| `esp32-serial-tools` | ESP32 串口通信与日志监控 |
-| `esp32-build-flash` | ESP-IDF 编译与烧录工作流 |
-| `daily-iteration` | 每日迭代计划与执行 |
-| `automated-testing` | 自动化测试（串口验证 + Web UI 验证） |
-| `code-refactoring` | 周期性代码重构策略 |
-| `web-page-inspector` | Web 页面内容检查与数据提取 |
+每个 Skill 都包含 **Self-Test（自检）** 和 **Blind Test（盲测）**，确保质量和可用性。
+
+| Skill | 描述 | 分类 |
+|-------|------|------|
+| `tmux-multi-shell` | tmux 多窗口管理（编译/烧录/串口监控） | dev-tools |
+| `cdp-web-inspector` | Chrome DevTools Protocol 浏览器自动化 | web-tools |
+| `esp32-serial-tools` | ESP32 串口通信与日志监控 | hardware |
+| `esp32-build-flash` | ESP-IDF 编译与烧录工作流 | hardware |
+| `daily-iteration` | 每日迭代计划与执行 | workflow |
+| `automated-testing` | 自动化测试（串口验证 + Web UI 验证） | quality |
+| `code-refactoring` | 周期性代码重构策略 | quality |
+| `web-page-inspector` | Web 页面内容检查与数据提取 | web-tools |
+| `environment-setup` | 开发环境检查与配置（工具链、驱动、依赖） | dev-tools |
+| `project-scaffolding` | 项目脚手架生成（目录结构、CMake、HTML 模板） | workflow |
+
+## Skill 质量保证
+
+每个 Skill 必须包含两层测试：
+
+- **Self-Test**: 可自动执行的验证，输出 `SELF_TEST_PASS` / `SELF_TEST_FAIL`
+- **Blind Test**: 模拟 AI 首次使用的场景测试（Prompt + 验收标准）
+
+详见 [`docs/SKILL_DEVELOPMENT.md`](docs/SKILL_DEVELOPMENT.md)。
 
 ## License
 

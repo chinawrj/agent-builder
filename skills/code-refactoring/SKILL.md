@@ -151,6 +151,73 @@ sensor_reader.c (100 lines) - 传感器读取
 - Web UI 测试: ✅ 4/4 通过
 ```
 
+## Self-Test（自检）
+
+> 验证重构工作流的工具和流程。
+
+### 自检步骤
+
+```bash
+# Test 1: Git 可用且支持分支操作
+TMP_REPO=$(mktemp -d)
+cd "$TMP_REPO" && git init -q && \
+  echo "init" > file.txt && git add . && git commit -q -m "init" && \
+  git checkout -q -b refactor/test && \
+  echo "refactored" > file.txt && git add . && git commit -q -m "refactor: test" && \
+  git checkout -q main && git merge -q refactor/test && \
+  echo "SELF_TEST_PASS: git_branch_workflow" || echo "SELF_TEST_FAIL: git_branch_workflow"
+rm -rf "$TMP_REPO"
+
+# Test 2: 代码检查工具可用
+command -v grep &>/dev/null && command -v wc &>/dev/null && \
+  echo "SELF_TEST_PASS: code_analysis_tools" || echo "SELF_TEST_FAIL: code_analysis_tools"
+
+# Test 3: TODO/FIXME 检测逻辑
+TMP_FILE=$(mktemp)
+cat > "$TMP_FILE" << 'EOF'
+// TODO: fix this
+// FIXME: memory leak
+void ok_function() {}
+// TODO: another one
+EOF
+COUNT=$(grep -c 'TODO\|FIXME' "$TMP_FILE")
+[ "$COUNT" -eq 3 ] && echo "SELF_TEST_PASS: todo_detection ($COUNT found)" || echo "SELF_TEST_FAIL: todo_detection (expected 3, got $COUNT)"
+rm "$TMP_FILE"
+
+# Test 4: 函数行数检测
+TMP_SRC=$(mktemp --suffix=.c 2>/dev/null || mktemp)
+for i in $(seq 1 60); do echo "line $i;" >> "$TMP_SRC"; done
+LINES=$(wc -l < "$TMP_SRC")
+[ "$LINES" -gt 50 ] && echo "SELF_TEST_PASS: long_function_detect ($LINES lines)" || echo "SELF_TEST_FAIL: long_function_detect"
+rm "$TMP_SRC"
+```
+
+### Blind Test（盲测）
+
+**测试 Prompt:**
+```
+你是一个 AI 开发助手。请阅读此 Skill，然后对以下代码进行重构分析：
+
+void handle_everything() {
+    // 60 行 WiFi 初始化代码
+    // 40 行 HTTP 服务器代码
+    // 30 行传感器读取代码
+    // 5 个 TODO 和 2 个 FIXME
+    // 3 处重复的错误处理代码
+}
+
+1. 识别所有重构触发条件（参考 Skill 中的阈值表）
+2. 提出具体的重构方案（拆分为哪几个模块）
+3. 生成重构报告模板
+```
+
+**验收标准:**
+- [ ] Agent 识别了函数超长（130行 > 50行阈值）
+- [ ] Agent 识别了 TODO/FIXME 超标（7 > 5）
+- [ ] Agent 识别了重复代码
+- [ ] Agent 提出了拆分为 wifi_manager, http_server, sensor_reader 的方案
+- [ ] Agent 生成了符合 Skill 格式的重构报告
+
 ## 成功标准
 
 - [ ] 重构前后所有测试保持通过

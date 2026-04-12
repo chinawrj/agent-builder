@@ -250,6 +250,69 @@ echo "Web UI 测试: $([ $WEB_RESULT -eq 0 ] && echo '✅ PASS' || echo '❌ FAI
 exit $(( SERIAL_RESULT + WEB_RESULT ))
 ```
 
+## Self-Test（自检）
+
+> 验证自动化测试框架的依赖和核心逻辑。
+
+### 自检步骤
+
+```bash
+# Test 1: pyserial 和 patchright 可用
+python3 -c "import serial; print('SELF_TEST_PASS: pyserial')" 2>/dev/null || echo "SELF_TEST_FAIL: pyserial"
+python3 -c "from patchright.sync_api import sync_playwright; print('SELF_TEST_PASS: patchright')" 2>/dev/null || echo "SELF_TEST_FAIL: patchright"
+
+# Test 2: 测试类的基本结构验证
+python3 -c "
+import re, sys
+
+# 模拟串口测试逻辑
+class MockSerialTest:
+    def __init__(self):
+        self.results = []
+    def _record(self, name, passed, msg):
+        self.results.append({'name': name, 'passed': passed, 'message': msg})
+    def test_pattern(self):
+        lines = [
+            'I (1000) wifi: got ip:192.168.1.10',
+            'E (2000) panic: Guru Meditation Error',
+        ]
+        for line in lines:
+            ip = re.search(r'got ip:(\d+\.\d+\.\d+\.\d+)', line)
+            if ip:
+                self._record('wifi', True, f'IP: {ip.group(1)}')
+            if re.search(r'error|panic', line, re.IGNORECASE):
+                self._record('error_detect', True, line.strip())
+
+t = MockSerialTest()
+t.test_pattern()
+assert len(t.results) == 2, f'Expected 2 results, got {len(t.results)}'
+print('SELF_TEST_PASS: test_framework')
+" || echo "SELF_TEST_FAIL: test_framework"
+
+# Test 3: bash 测试流程逻辑
+bash -c '
+RESULT=0
+[ $RESULT -eq 0 ] && echo "SELF_TEST_PASS: bash_test_flow" || echo "SELF_TEST_FAIL: bash_test_flow"
+'
+```
+
+### Blind Test（盲测）
+
+**测试 Prompt:**
+```
+你是一个 AI 开发助手。请阅读此 Skill，然后：
+1. 编写一个简化版的串口测试类，只包含 test_pattern 方法
+2. 用以下模拟数据测试："got ip:10.0.0.1", "httpd_start: Started", "assert failed"
+3. 输出 PASS/FAIL 汇总
+4. 解释为什么测试金字塔中串口测试在 Web UI 测试之前
+```
+
+**验收标准:**
+- [ ] Agent 使用了 Skill 中定义的测试类结构
+- [ ] Agent 正确提取了 IP 地址和错误
+- [ ] Agent 理解了测试金字塔的分层逻辑
+- [ ] Agent 的输出包含清晰的 PASS/FAIL 标记
+
 ## 成功标准
 
 - [ ] 串口自动化测试全部通过

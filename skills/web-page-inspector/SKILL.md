@@ -216,6 +216,84 @@ def generate_page_report(page, output_dir="reports"):
     return report
 ```
 
+## Self-Test（自检）
+
+> 验证页面检查和数据提取能力。
+
+### 自检步骤
+
+```bash
+# Test 1: Patchright 可用（同 cdp-web-inspector）
+python3 -c "from patchright.sync_api import sync_playwright; print('SELF_TEST_PASS: patchright')" 2>/dev/null || echo "SELF_TEST_FAIL: patchright"
+
+# Test 2: 页面数据提取逻辑验证（使用本地 HTML）
+python3 -c "
+from patchright.sync_api import sync_playwright
+import tempfile, os
+
+html = '''
+<html><body>
+<h1>Test Device</h1>
+<span id='temperature'>25.3</span> °C
+<span id='humidity'>60.1</span> %
+<img id='stream' src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'>
+</body></html>
+'''
+
+pw = sync_playwright().start()
+ctx = pw.chromium.launch_persistent_context(
+    user_data_dir=tempfile.mkdtemp(),
+    channel='chrome', headless=True, no_viewport=True,
+)
+page = ctx.pages[0] if ctx.pages else ctx.new_page()
+page.set_content(html)
+
+assert page.locator('#temperature').text_content() == '25.3'
+assert page.locator('#humidity').text_content() == '60.1'
+assert page.locator('#stream').is_visible()
+
+ctx.close()
+pw.stop()
+print('SELF_TEST_PASS: data_extraction')
+" 2>/dev/null || echo "SELF_TEST_FAIL: data_extraction"
+
+# Test 3: 截图功能
+python3 -c "
+from patchright.sync_api import sync_playwright
+import tempfile
+pw = sync_playwright().start()
+ctx = pw.chromium.launch_persistent_context(
+    user_data_dir=tempfile.mkdtemp(),
+    channel='chrome', headless=True, no_viewport=True)
+page = ctx.pages[0] if ctx.pages else ctx.new_page()
+page.set_content('<h1>Screenshot Test</h1>')
+page.screenshot(path='/tmp/__selftest_screenshot__.png')
+ctx.close(); pw.stop()
+import os
+assert os.path.getsize('/tmp/__selftest_screenshot__.png') > 0
+os.remove('/tmp/__selftest_screenshot__.png')
+print('SELF_TEST_PASS: screenshot')
+" 2>/dev/null || echo "SELF_TEST_FAIL: screenshot"
+```
+
+### Blind Test（盲测）
+
+**测试 Prompt:**
+```
+你是一个 AI 开发助手。请阅读此 Skill，然后：
+1. 创建一个本地 HTML 文件模拟设备页面，包含温度 (22.5°C) 和湿度 (45.0%)
+2. 使用 Patchright 打开该页面
+3. 提取温度和湿度数据
+4. 检测是否有视频流元素
+5. 截图并生成 Markdown 格式的检查报告
+```
+
+**验收标准:**
+- [ ] Agent 使用了 Patchright 而非 Playwright
+- [ ] Agent 正确使用了 locator 提取数据
+- [ ] Agent 生成了包含数据+截图路径的报告
+- [ ] Agent 正确处理了视频流元素不存在的情况
+
 ## 成功标准
 
 - [ ] 能正确访问设备 Web 页面
