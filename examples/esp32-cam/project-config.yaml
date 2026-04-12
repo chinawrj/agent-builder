@@ -1,0 +1,52 @@
+# ESP32-CAM 示例项目配置
+name: "esp32-cam"
+description: "ESP32-CAM 项目：通过浏览器实时查看摄像头画面，并显示虚拟温湿度传感器数据"
+target_hardware: "esp32"
+framework: "esp-idf"
+dev_os: "macos"
+
+features:
+  - "MJPEG 视频流，通过浏览器实时查看摄像头画面"
+  - "虚拟温度传感器数据显示（模拟 DHT22）"
+  - "虚拟湿度传感器数据显示（模拟 DHT22）"
+  - "Web 仪表盘页面，同时展示视频流和传感器数据"
+  - "WiFi STA 模式连接到路由器"
+  - "传感器数据通过 WebSocket 或定时刷新更新"
+
+skills:
+  - "tmux-multi-shell"
+  - "esp32-build-flash"
+  - "esp32-serial-tools"
+  - "cdp-web-inspector"
+  - "web-page-inspector"
+  - "daily-iteration"
+  - "automated-testing"
+  - "code-refactoring"
+
+acceptance_criteria:
+  - "浏览器打开设备 IP 后能看到实时 MJPEG 视频流"
+  - "页面同时显示当前温度（°C）和湿度（%）数据"
+  - "传感器数据每 5 秒自动刷新"
+  - "设备启动后 30 秒内 WiFi 连接成功并开始服务"
+  - "连续运行 24 小时无崩溃"
+  - "Web 页面加载时间小于 3 秒"
+
+milestones:
+  - name: "M1 - 基础框架"
+    description: |
+      搭建 ESP-IDF 项目结构，实现 WiFi 连接，
+      启动 HTTP 服务器，返回简单的 HTML 页面。
+  - name: "M2 - 摄像头集成"
+    description: |
+      集成 esp32-camera 组件，实现 MJPEG 流，
+      通过浏览器可以查看实时视频。
+  - name: "M3 - 传感器数据"
+    description: |
+      实现虚拟温湿度传感器，在 Web 页面上展示数据，
+      支持定时刷新。
+  - name: "M4 - 测试与优化"
+    description: |
+      完成自动化测试套件，进行稳定性测试和性能优化，
+      代码重构，完善文档。
+
+output_dir: "./examples/esp32-cam/output"
