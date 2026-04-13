@@ -36,7 +36,7 @@ agents:
 确认后，生成以下文件到目标目录：
 
 ```
-<target>/.github/
+<target>/.copilot/
 ├── agents/
 │   └── dev-workflow.agent.md    # 开发工作流 Agent
 ├── skills/                       # 选中的 skills（从库中复制）

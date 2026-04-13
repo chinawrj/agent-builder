@@ -32,11 +32,11 @@ agent-builder/
 ├── README.md                        # English README
 ├── README_zh.md                     # 中文 README
 ├── .github/
-│   ├── copilot-instructions.md     # 仓库级 AI 指令
-│   └── agents/
-│       ├── builder.agent.md        # Builder 主 Agent 定义
-│       ├── iterator.agent.md       # 功能迭代 Agent
-│       └── skill-tester.agent.md   # Skill 测试 Agent
+│   └── copilot-instructions.md     # 仓库级 AI 指令
+├── agents/
+│   ├── builder.agent.md            # Builder 主 Agent 定义
+│   ├── iterator.agent.md           # 功能迭代 Agent
+│   └── skill-tester.agent.md       # Skill 测试 Agent
 ├── skills/                          # 可复用 Skill 库
 │   ├── tmux-multi-shell/           # tmux 多终端管理
 │   ├── cdp-web-inspector/          # CDP 浏览器检查工具
