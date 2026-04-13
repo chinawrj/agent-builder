@@ -28,7 +28,7 @@ tools:
 1. 读取 `builder/config.py` 获取当前版本号和 SKILL_CATALOG
 2. 读取 `README.md` 了解项目整体状态
 3. 遍历 `skills/` 目录，检查每个 SKILL.md 的完整性
-4. 读取 `agents/` 目录，了解现有 agent 配置
+4. 读取 `.github/agents/` 目录，了解现有 agent 配置
 5. 检查 `builder/build.py` 的功能覆盖度
 
 ### Step 2: 问题发现

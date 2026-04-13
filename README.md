@@ -33,11 +33,11 @@ agent-builder/
 ├── README.md                        # English README
 ├── README_zh.md                     # Chinese README
 ├── .github/
-│   └── copilot-instructions.md     # Repo-level AI instructions
-├── agents/
-│   ├── builder.agent.md            # Builder main agent
-│   ├── iterator.agent.md           # Feature iteration agent
-│   └── skill-tester.agent.md       # Skill testing agent
+│   ├── copilot-instructions.md     # Repo-level AI instructions
+│   └── agents/
+│       ├── builder.agent.md        # Builder main agent
+│       ├── iterator.agent.md       # Feature iteration agent
+│       └── skill-tester.agent.md   # Skill testing agent
 ├── skills/                          # Reusable skill library
 │   ├── tmux-multi-shell/           # tmux multi-terminal management
 │   ├── cdp-web-inspector/          # CDP browser inspection tools
