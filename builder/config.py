@@ -137,6 +137,11 @@ SKILL_CATALOG = {
         "description": "项目脚手架生成（目录结构、CMake、HTML 模板）",
         "tags": ["scaffold", "template", "init"],
     },
+    "board-pinout-reference": {
+        "category": "hardware",
+        "description": "开发板引脚定义(Pinout)与核心模组资源速查",
+        "tags": ["pinout", "hardware", "esp32", "reference", "datasheet"],
+    },
 }
 
 
