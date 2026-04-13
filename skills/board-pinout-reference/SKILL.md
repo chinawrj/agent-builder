@@ -51,7 +51,33 @@
 | **供电** | 5V (VIN) / 3.3V |
 | **USB 转串口** | 无板载（需外接 USB-TTL 烧录） |
 
+### ESP32 引脚复用 (PINMUX) 说明
+
+> ⚠️ **理解 PINMUX 是正确使用引脚表的前提。**
+
+ESP32 的外设引脚分配有两种机制，不同外设使用的机制不同：
+
+| 机制 | 原理 | 可否重映射 | 本板涉及的外设 |
+|------|------|-----------|--------------|
+| **GPIO Matrix** | 信号通过可编程交换矩阵路由到 GPIO | ✅ 可任意映射 | 摄像头 (I2S)、UART、I2C (SCCB) |
+| **IO MUX** | 信号直连到固定 GPIO，无矩阵延迟 | ❌ 硬件固定 | SDMMC Host Slot 2 (HS2) |
+
+**对引脚表的影响：**
+
+- **摄像头引脚**：通过 GPIO Matrix 路由。表中的 GPIO 编号是**板卡 PCB 设计者选定的**，
+  不是 ESP32 芯片强制的。不同厂商的 ESP32-CAM 板可能使用不同映射。
+  代码中需要用 `#define` 配置每个引脚。
+- **TF 卡 (SDMMC) 引脚**：使用 I/O MUX 直连到 SDMMC HS2 Slot。GPIO 编号是
+  **ESP32 芯片硬件固定的**，所有 ESP32 板卡都一样，无法更改。
+  如果用 SPI 模式访问 SD 卡，则可通过 GPIO Matrix 重映射。
+- **串口引脚**：UART0 默认 IO MUX 分配 GPIO1(TX)/GPIO3(RX)，但可通过 GPIO Matrix 重映射到其他引脚。
+- **I2C (SCCB) 引脚**：通过 GPIO Matrix 路由，可任意映射。
+
+> 参考: [ESP32 Technical Reference Manual - IO MUX and GPIO Matrix](https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_cn.pdf) §4
+
 ### 摄像头接口引脚 (OV2640/OV3660)
+
+> 🔀 **路由方式: GPIO Matrix** — 以下引脚由板卡 PCB 设计决定，非芯片固定
 
 | 摄像头信号 | ESP32 GPIO | 说明 |
 |-----------|-----------|------|
@@ -73,14 +99,16 @@
 
 ### TF 卡 (Micro SD) 引脚
 
-| TF 卡信号 | ESP32 GPIO | 说明 |
-|----------|-----------|------|
-| CLK | GPIO14 | SPI 时钟 |
-| CMD | GPIO15 | SPI MOSI / SD CMD |
-| DATA0 | GPIO2 | SPI MISO / SD DAT0 |
-| DATA1 | GPIO4 | SD DAT1 (1-bit 模式不用) |
-| DATA2 | GPIO12 | SD DAT2 (⚠️ 启动时需低电平) |
-| DATA3 | GPIO13 | SD DAT3 / CS |
+> 📌 **路由方式: IO MUX (SDMMC HS2)** — 以下引脚为 ESP32 芯片硬件固定，不可更改
+
+| TF 卡信号 | ESP32 GPIO | SDMMC HS2 功能 | 说明 |
+|----------|-----------|---------------|------|
+| CLK | GPIO14 | HS2_CLK | SDMMC 时钟 |
+| CMD | GPIO15 | HS2_CMD | SDMMC 命令线 |
+| DATA0 | GPIO2 | HS2_DATA0 | SDMMC 数据线 0 |
+| DATA1 | GPIO4 | HS2_DATA1 | 数据线 1 (1-bit 模式不用) |
+| DATA2 | GPIO12 | HS2_DATA2 | 数据线 2 (⚠️ 启动时需低电平) |
+| DATA3 | GPIO13 | HS2_DATA3 | 数据线 3 / SPI CS |
 
 > ⚠️ **GPIO12** 是 MTDI 引脚，ESP32 启动时读取此引脚决定 VDD_SDIO 电压。
 > 如果 SD 卡在上电时拉高 GPIO12，可能导致 Flash 供电电压错误而启动失败。
@@ -88,10 +116,16 @@
 
 ### 串口引脚
 
-| 信号 | ESP32 GPIO | 说明 |
-|------|-----------|------|
-| TX | GPIO1 (U0TXD) | 默认串口发送 |
-| RX | GPIO3 (U0RXD) | 默认串口接收 |
+> 🔀 **路由方式: IO MUX 默认 + GPIO Matrix 可重映射**
+
+| 信号 | ESP32 GPIO | IO MUX 功能 | 说明 |
+|------|-----------|------------|------|
+| TX | GPIO1 | U0TXD | UART0 默认发送 (IO MUX Function 1) |
+| RX | GPIO3 | U0RXD | UART0 默认接收 (IO MUX Function 1) |
+
+> 注: 源地原厂文档中串口 GPIO 栏为空，实际为 GPIO1/GPIO3 (UART0 默认 IO MUX 引脚)。
+> UART 信号可通过 GPIO Matrix 重映射到其他引脚，但本板无板载 USB 转串口，
+> 外接 USB-TTL 模块时需连接这两个默认引脚。
 
 ### 其他引脚
 

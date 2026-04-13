@@ -119,6 +119,15 @@ test_grep "module_esp32_wrover_e" "ESP32-WROVER-E"
 test_grep "module_flash_8mb" "Flash.*8.*MB|8.*MB.*Flash"
 test_grep "module_psram_8mb" "PSRAM.*8.*MB|8.*MB.*PSRAM"
 
+
+# --- PINMUX 说明 ---
+test_grep "has_pinmux_section" "PINMUX"
+test_grep "has_gpio_matrix" "GPIO Matrix"
+test_grep "has_io_mux" "IO MUX"
+test_grep "sdmmc_hs2_fixed" "HS2.*固定|硬件固定|不可更改"
+test_grep "camera_gpio_matrix" "摄像头.*GPIO Matrix|GPIO Matrix.*摄像头|板卡.*PCB.*设计"
+test_grep "uart_remappable" "UART.*重映射|重映射.*引脚|U0TXD"
+
 # --- 汇总 ---
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
