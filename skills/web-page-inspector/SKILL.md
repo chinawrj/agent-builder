@@ -229,7 +229,7 @@ python3 -c "from patchright.sync_api import sync_playwright; print('SELF_TEST_PA
 # Test 2: 页面数据提取逻辑验证（使用本地 HTML）
 python3 -c "
 from patchright.sync_api import sync_playwright
-import tempfile, os
+import os
 
 html = '''
 <html><body>
@@ -242,8 +242,8 @@ html = '''
 
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
-    user_data_dir=tempfile.mkdtemp(),
-    channel='chrome', headless=True, no_viewport=True,
+    user_data_dir=os.path.expanduser("~/.patchright-userdata/selftest"),
+    channel='chrome', headless=False, no_viewport=True,  # ⛔ 禁止 headless
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
 page.set_content(html)
@@ -260,11 +260,11 @@ print('SELF_TEST_PASS: data_extraction')
 # Test 3: 截图功能
 python3 -c "
 from patchright.sync_api import sync_playwright
-import tempfile
+import os
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
-    user_data_dir=tempfile.mkdtemp(),
-    channel='chrome', headless=True, no_viewport=True)
+    user_data_dir=os.path.expanduser("~/.patchright-userdata/selftest"),
+    channel='chrome', headless=False, no_viewport=True)  # ⛔ 禁止 headless
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
 page.set_content('<h1>Screenshot Test</h1>')
 page.screenshot(path='/tmp/__selftest_screenshot__.png')

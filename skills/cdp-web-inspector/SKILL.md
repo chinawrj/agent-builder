@@ -128,15 +128,15 @@ python3 -c "from patchright.sync_api import sync_playwright; print('SELF_TEST_PA
 ls ~/Library/Caches/ms-playwright/chromium-* &>/dev/null && \
   echo "SELF_TEST_PASS: chromium_driver" || echo "SELF_TEST_FAIL: chromium_driver"
 
-# Test 3: 可以启动浏览器（headless 模式快速验证）
+# Test 3: 可以启动浏览器（可见模式验证）
 python3 -c "
 from patchright.sync_api import sync_playwright
-import tempfile, os
+import os
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
-    user_data_dir=tempfile.mkdtemp(),
+    user_data_dir=os.path.expanduser("~/.patchright-userdata/selftest"),
     channel='chrome',
-    headless=True,
+    headless=False,  # ⛔ 禁止 headless
     no_viewport=True,
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
@@ -161,7 +161,7 @@ print('SELF_TEST_PASS: browser_launch')
 **测试 Prompt:**
 ```
 你是一个 AI 开发助手。请阅读此 Skill，然后：
-1. 启动一个 Patchright 浏览器实例（headless 模式即可）
+1. 启动一个 Patchright 浏览器实例（必须使用可见模式 headless=False）
 2. 访问 https://example.com
 3. 提取页面标题和 <h1> 文本
 4. 截图保存到 /tmp/cdp-test.png

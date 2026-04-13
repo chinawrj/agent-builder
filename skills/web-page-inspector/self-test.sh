@@ -24,12 +24,12 @@ test_pass "patchright_import ($PYTHON)"
 # --- Test 2: 页面表格数据提取 ---
 if $PYTHON -c "
 from patchright.sync_api import sync_playwright
-import tempfile
+import os
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
-    user_data_dir=tempfile.mkdtemp(),
+    user_data_dir=os.path.expanduser('~/.patchright-userdata/selftest'),
     channel='chrome',
-    headless=True,
+    headless=False,  # ⛔ 禁止 headless
     no_viewport=True,
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
@@ -50,12 +50,12 @@ fi
 # --- Test 3: CSS 选择器查询 ---
 if $PYTHON -c "
 from patchright.sync_api import sync_playwright
-import tempfile
+import os
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
-    user_data_dir=tempfile.mkdtemp(),
+    user_data_dir=os.path.expanduser('~/.patchright-userdata/selftest'),
     channel='chrome',
-    headless=True,
+    headless=False,  # ⛔ 禁止 headless
     no_viewport=True,
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
@@ -75,12 +75,12 @@ fi
 # --- Test 4: JavaScript 执行提取动态数据 ---
 if $PYTHON -c "
 from patchright.sync_api import sync_playwright
-import tempfile
+import os
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
-    user_data_dir=tempfile.mkdtemp(),
+    user_data_dir=os.path.expanduser('~/.patchright-userdata/selftest'),
     channel='chrome',
-    headless=True,
+    headless=False,  # ⛔ 禁止 headless
     no_viewport=True,
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()

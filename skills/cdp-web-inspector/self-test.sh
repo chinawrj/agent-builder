@@ -29,15 +29,15 @@ else
   skip_case "chromium_driver" "patchright install chromium"
 fi
 
-# --- Test 3: headless 浏览器启动 + 页面操作 ---
+# --- Test 3: 可见模式浏览器启动 + 页面操作 ---
 if $PYTHON -c "
 from patchright.sync_api import sync_playwright
-import tempfile
+import os
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
-    user_data_dir=tempfile.mkdtemp(),
+    user_data_dir=os.path.expanduser('~/.patchright-userdata/selftest'),
     channel='chrome',
-    headless=True,
+    headless=False,  # ⛔ 禁止 headless
     no_viewport=True,
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
@@ -55,12 +55,12 @@ fi
 # --- Test 4: JavaScript evaluate ---
 if $PYTHON -c "
 from patchright.sync_api import sync_playwright
-import tempfile
+import os
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
-    user_data_dir=tempfile.mkdtemp(),
+    user_data_dir=os.path.expanduser('~/.patchright-userdata/selftest'),
     channel='chrome',
-    headless=True,
+    headless=False,  # ⛔ 禁止 headless
     no_viewport=True,
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
