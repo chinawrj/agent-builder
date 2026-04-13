@@ -2,6 +2,9 @@
 # self-test for web-page-inspector
 # 运行: bash skills/web-page-inspector/self-test.sh
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/../_common/detect-python.sh"
+
 PASS=0
 FAIL=0
 SKIP=0
@@ -10,19 +13,18 @@ test_pass() { echo "SELF_TEST_PASS: $1"; PASS=$((PASS + 1)); }
 test_fail() { echo "SELF_TEST_FAIL: $1"; FAIL=$((FAIL + 1)); }
 skip_case() { echo "SELF_TEST_SKIP: $1 ($2)"; SKIP=$((SKIP + 1)); }
 
-# --- Test 1: patchright 可导入 ---
-if python3 -c "from patchright.sync_api import sync_playwright" 2>/dev/null; then
-  test_pass "patchright_import"
-else
-  skip_case "patchright_import" "pip install patchright"
+# --- Detect Python with patchright ---
+PYTHON=$(detect_python "patchright.sync_api")
+if [ -z "$PYTHON" ]; then
+  skip_case "patchright_import" "patchright 未找到，设置 PATCHRIGHT_PYTHON 或 pip install patchright"
   echo ""; echo "Results: $PASS passed, $FAIL failed, $SKIP skipped"; exit $FAIL
 fi
+test_pass "patchright_import ($PYTHON)"
 
-# --- Test 2: headless 页面数据提取 ---
-if python3 -c "
+# --- Test 2: 页面表格数据提取 ---
+if $PYTHON -c "
 from patchright.sync_api import sync_playwright
-import tempfile, json
-
+import tempfile
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
     user_data_dir=tempfile.mkdtemp(),
@@ -32,14 +34,11 @@ ctx = pw.chromium.launch_persistent_context(
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
 page.goto('data:text/html,<table><tr><td>Name</td><td>Value</td></tr><tr><td>Temp</td><td>25.5</td></tr></table>')
-
-# 提取表格数据
 rows = page.query_selector_all('tr')
 assert len(rows) == 2, f'Expected 2 rows, got {len(rows)}'
 cells = rows[1].query_selector_all('td')
 assert cells[0].text_content() == 'Temp'
 assert cells[1].text_content() == '25.5'
-
 ctx.close()
 pw.stop()
 " 2>/dev/null; then
@@ -49,10 +48,9 @@ else
 fi
 
 # --- Test 3: CSS 选择器查询 ---
-if python3 -c "
+if $PYTHON -c "
 from patchright.sync_api import sync_playwright
 import tempfile
-
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
     user_data_dir=tempfile.mkdtemp(),
@@ -62,12 +60,10 @@ ctx = pw.chromium.launch_persistent_context(
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
 page.goto('data:text/html,<div class=\"sensor\"><span class=\"label\">Humidity</span><span class=\"value\">60%</span></div>')
-
 label = page.query_selector('.sensor .label')
 value = page.query_selector('.sensor .value')
 assert label.text_content() == 'Humidity'
 assert value.text_content() == '60%'
-
 ctx.close()
 pw.stop()
 " 2>/dev/null; then
@@ -77,10 +73,9 @@ else
 fi
 
 # --- Test 4: JavaScript 执行提取动态数据 ---
-if python3 -c "
+if $PYTHON -c "
 from patchright.sync_api import sync_playwright
 import tempfile
-
 pw = sync_playwright().start()
 ctx = pw.chromium.launch_persistent_context(
     user_data_dir=tempfile.mkdtemp(),
@@ -89,14 +84,11 @@ ctx = pw.chromium.launch_persistent_context(
     no_viewport=True,
 )
 page = ctx.pages[0] if ctx.pages else ctx.new_page()
-html = '''<html><body><script>
-document.body.innerHTML = '<div id=\"dynamic\">loaded</div>';
-</script></body></html>'''
+html = '<html><body><script>document.body.innerHTML=\"<div id=d>loaded</div>\";</script></body></html>'
 page.goto(f'data:text/html,{html}')
-page.wait_for_selector('#dynamic')
-text = page.evaluate('document.getElementById(\"dynamic\").textContent')
+page.wait_for_selector('#d')
+text = page.evaluate('document.getElementById(\"d\").textContent')
 assert text == 'loaded', f'Expected loaded, got {text}'
-
 ctx.close()
 pw.stop()
 " 2>/dev/null; then

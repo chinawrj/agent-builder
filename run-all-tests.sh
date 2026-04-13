@@ -91,6 +91,7 @@ else
   # 全量测试
   for skill_dir in "$SKILLS_DIR"/*/; do
     skill_name=$(basename "$skill_dir")
+    [ "$skill_name" = "_common" ] && continue
     run_skill_test "$skill_name"
   done
 fi

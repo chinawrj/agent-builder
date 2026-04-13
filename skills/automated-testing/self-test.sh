@@ -2,6 +2,9 @@
 # self-test for automated-testing
 # 运行: bash skills/automated-testing/self-test.sh
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/../_common/detect-python.sh"
+
 PASS=0
 FAIL=0
 SKIP=0
@@ -22,24 +25,26 @@ skip_case() {
   SKIP=$((SKIP + 1))
 }
 
-# --- Test 1: pyserial 可导入 ---
-if python3 -c "import serial" 2>/dev/null; then
+# --- Detect Python with patchright ---
+PYTHON=$(detect_python "patchright.sync_api")
+if [ -n "$PYTHON" ]; then
+  echo "SELF_TEST_PASS: patchright_import ($PYTHON)"
+  PASS=$((PASS + 1))
+else
+  skip_case "patchright_import" "pip install patchright"
+  PYTHON="python3"  # fallback for non-patchright tests
+fi
+
+# --- Test 2: pyserial 可导入 ---
+if $PYTHON -c "import serial" 2>/dev/null; then
   echo "SELF_TEST_PASS: pyserial_import"
   PASS=$((PASS + 1))
 else
   skip_case "pyserial_import" "pip install pyserial"
 fi
 
-# --- Test 2: patchright 可导入 ---
-if python3 -c "from patchright.sync_api import sync_playwright" 2>/dev/null; then
-  echo "SELF_TEST_PASS: patchright_import"
-  PASS=$((PASS + 1))
-else
-  skip_case "patchright_import" "pip install patchright"
-fi
-
 # --- Test 3: 测试框架模拟 — 串口模式匹配 ---
-test_case "test_framework_pattern_match" python3 -c "
+test_case "test_framework_pattern_match" $PYTHON -c "
 import re
 class MockSerialTest:
     def __init__(self):
@@ -66,7 +71,7 @@ assert len(t.results) == 2, f'Expected 2, got {len(t.results)}'
 test_case "bash_test_flow" bash -c 'RESULT=0; [ $RESULT -eq 0 ]'
 
 # --- Test 5: 测试结果汇总逻辑 ---
-test_case "result_aggregation" python3 -c "
+test_case "result_aggregation" $PYTHON -c "
 results = [
     {'name': 'test1', 'passed': True},
     {'name': 'test2', 'passed': False},

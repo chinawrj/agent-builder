@@ -2,6 +2,9 @@
 # self-test for cdp-web-inspector
 # 运行: bash skills/cdp-web-inspector/self-test.sh
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/../_common/detect-python.sh"
+
 PASS=0
 FAIL=0
 SKIP=0
@@ -10,13 +13,13 @@ test_pass() { echo "SELF_TEST_PASS: $1"; PASS=$((PASS + 1)); }
 test_fail() { echo "SELF_TEST_FAIL: $1"; FAIL=$((FAIL + 1)); }
 skip_case() { echo "SELF_TEST_SKIP: $1 ($2)"; SKIP=$((SKIP + 1)); }
 
-# --- Test 1: patchright 可导入 ---
-if python3 -c "from patchright.sync_api import sync_playwright" 2>/dev/null; then
-  test_pass "patchright_import"
-else
-  skip_case "patchright_import" "pip install patchright"
+# --- Detect Python with patchright ---
+PYTHON=$(detect_python "patchright.sync_api")
+if [ -z "$PYTHON" ]; then
+  skip_case "patchright_import" "patchright 未找到，设置 PATCHRIGHT_PYTHON 或 pip install patchright"
   echo ""; echo "Results: $PASS passed, $FAIL failed, $SKIP skipped"; exit $FAIL
 fi
+test_pass "patchright_import ($PYTHON)"
 
 # --- Test 2: chromium 驱动存在 ---
 if ls ~/Library/Caches/ms-playwright/chromium-* &>/dev/null || \
@@ -27,7 +30,7 @@ else
 fi
 
 # --- Test 3: headless 浏览器启动 + 页面操作 ---
-if python3 -c "
+if $PYTHON -c "
 from patchright.sync_api import sync_playwright
 import tempfile
 pw = sync_playwright().start()
@@ -50,7 +53,7 @@ else
 fi
 
 # --- Test 4: JavaScript evaluate ---
-if python3 -c "
+if $PYTHON -c "
 from patchright.sync_api import sync_playwright
 import tempfile
 pw = sync_playwright().start()

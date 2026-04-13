@@ -2,6 +2,9 @@
 # self-test for esp32-serial-tools
 # 运行: bash skills/esp32-serial-tools/self-test.sh
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/../_common/detect-python.sh"
+
 PASS=0
 FAIL=0
 SKIP=0
@@ -19,11 +22,13 @@ test_case() {
   fi
 }
 
-# --- Test 1: pyserial 可导入 ---
-if python3 -c "import serial" 2>/dev/null; then
-  test_pass "pyserial_import"
+# --- Detect Python with serial ---
+PYTHON=$(detect_python "serial")
+if [ -n "$PYTHON" ]; then
+  test_pass "pyserial_import ($PYTHON)"
 else
   skip_case "pyserial_import" "pip install pyserial"
+  PYTHON="python3"  # fallback for non-serial tests
 fi
 
 # --- Test 2: 串口设备检测 ---
@@ -42,7 +47,7 @@ else
 fi
 
 # --- Test 4: 日志模式匹配逻辑 ---
-test_case "pattern_matching" python3 -c "
+test_case "pattern_matching" $PYTHON -c "
 import re
 test_lines = [
     'I (1234) wifi: got ip:192.168.1.100',
@@ -64,7 +69,7 @@ assert error_found, 'Error pattern not found'
 "
 
 # --- Test 5: 日志级别过滤 ---
-test_case "log_level_filter" python3 -c "
+test_case "log_level_filter" $PYTHON -c "
 import re
 lines = [
     'I (100) tag: info msg',
