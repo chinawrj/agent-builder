@@ -39,4 +39,5 @@
 | `{{ACCEPTANCE_CRITERIA}}` | 验收标准（Checkbox 列表） |
 | `{{FEATURES}}` | 功能列表（Markdown） |
 | `{{MILESTONES}}` | 里程碑（Markdown 标题+描述） |
+| `{{MCP_SERVERS_LIST}}` | 选中的 MCP servers 列表（Markdown） |
 | `{{BUILDER_VERSION}}` | Builder 引擎版本号 |

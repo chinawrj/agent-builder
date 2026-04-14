@@ -7,7 +7,7 @@ import re
 import shutil
 import sys
 
-from .config import ProjectConfig, SKILL_CATALOG, VERSION, recommend_skills
+from .config import ProjectConfig, SKILL_CATALOG, MCP_SERVER_CATALOG, VERSION, recommend_skills, recommend_mcp_servers
 
 
 BUILDER_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -35,6 +35,37 @@ def copy_skills(skill_names: list[str], output_dir: str, dry_run: bool = False):
 
     if missing:
         raise FileNotFoundError(f"以下 skill 不存在或缺少 SKILL.md: {', '.join(missing)}")
+
+
+
+def generate_mcp_config(mcp_names: list[str], output_dir: str, dry_run: bool = False):
+    """生成 .vscode/mcp.json 配置文件"""
+    import json
+
+    if not mcp_names:
+        return
+
+    mcp_servers = {}
+    for name in mcp_names:
+        info = MCP_SERVER_CATALOG.get(name)
+        if not info:
+            print(f"  ⚠ 未知 MCP server: {name}")
+            continue
+        mcp_servers[info["mcp_key"]] = {"url": info["url"]}
+
+    config = {"mcpServers": mcp_servers}
+
+    if not dry_run:
+        vscode_dir = os.path.join(output_dir, ".vscode")
+        os.makedirs(vscode_dir, exist_ok=True)
+        mcp_path = os.path.join(vscode_dir, "mcp.json")
+        with open(mcp_path, "w") as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
+            f.write("\n")
+
+    for name in mcp_names:
+        info = MCP_SERVER_CATALOG.get(name, {})
+        print(f"  ✓ {info.get('mcp_key', name)} → {info.get('url', '?')}")
 
 
 def render_template(template_name: str, variables: dict) -> str:
@@ -86,6 +117,10 @@ def build_variables(config: ProjectConfig) -> dict:
         ) or "*(暂未定义验收标准)*",
         "FEATURES": "\n".join(f"- {f}" for f in config.features) or "*(暂未定义功能)*",
         "MILESTONES": _format_milestones(config.milestones),
+        "MCP_SERVERS_LIST": "\n".join(
+            f"- `{s}`: {MCP_SERVER_CATALOG.get(s, {}).get('description', s)}"
+            for s in config.mcp_servers
+        ) or "*(无 MCP servers)*",
         "BUILDER_VERSION": VERSION,
     }
 
@@ -103,18 +138,30 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
         os.makedirs(output_dir, exist_ok=True)
 
     # 1. 复制 Skills
-    print("[1/4] 复制 Skills...")
+    print("[1/5] 复制 Skills...")
     if not config.skills:
         config.skills = recommend_skills(config)
         print(f"  (自动推荐 {len(config.skills)} 个 skills)")
     copy_skills(config.skills, output_dir, dry_run=dry_run)
     print()
 
-    # 2. 构建模板变量
+    # 2. 生成 MCP 配置
+    print("[2/5] 生成 MCP 配置...")
+    if not config.mcp_servers:
+        config.mcp_servers = recommend_mcp_servers(config)
+        if config.mcp_servers:
+            print(f"  (自动推荐 {len(config.mcp_servers)} 个 MCP servers)")
+    if config.mcp_servers:
+        generate_mcp_config(config.mcp_servers, output_dir, dry_run=dry_run)
+    else:
+        print("  (无 MCP servers)")
+    print()
+
+    # 3. 构建模板变量
     variables = build_variables(config)
 
-    # 3. 生成工作流 Agent
-    print("[2/4] 生成工作流 Agent...")
+    # 4. 生成工作流 Agent
+    print("[3/5] 生成工作流 Agent...")
     agent_content = render_template("workflow-agent.agent.md", variables)
     agent_path = os.path.join(output_dir, "agents", "dev-workflow.agent.md")
     if not dry_run:
@@ -125,7 +172,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 4. 生成需求文档
-    print("[3/4] 生成需求文档...")
+    print("[4/5] 生成需求文档...")
     req_content = render_template("requirements.md", variables)
     req_path = os.path.join(output_dir, "requirements.md")
     if not dry_run:
@@ -135,7 +182,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 5. 生成每日计划模板
-    print("[4/4] 生成每日计划模板...")
+    print("[5/5] 生成每日计划模板...")
     plan_content = render_template("daily-plan.md", variables)
     plan_path = os.path.join(output_dir, "daily-plan.md")
     if not dry_run:
@@ -169,6 +216,26 @@ def list_skills():
                 print(f"    tags: {', '.join(info['tags'])}")
 
 
+
+def list_mcp_servers():
+    """列出所有可用 MCP servers"""
+    print(f"Agent Builder v{VERSION} - 可用 MCP Servers")
+    print("=" * 60)
+
+    categories = {}
+    for name, info in MCP_SERVER_CATALOG.items():
+        cat = info["category"]
+        categories.setdefault(cat, []).append((name, info))
+
+    for cat in sorted(categories):
+        print(f"\n[{cat}]")
+        for name, info in sorted(categories[cat]):
+            print(f"  {name:<28} {info['description']}")
+            print(f"    url: {info['url']}")
+            if info.get("tags"):
+                print(f"    tags: {', '.join(info['tags'])}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=f"Agent Builder v{VERSION} - 生成项目专属 AI agent",
@@ -183,12 +250,17 @@ def main():
     parser.add_argument("--output", help="输出目录路径")
     parser.add_argument("--dry-run", action="store_true", help="预览生成内容，不实际写入文件")
     parser.add_argument("--list-skills", action="store_true", help="列出所有可用 skills")
+    parser.add_argument("--list-mcp", action="store_true", help="列出所有可用 MCP servers")
     parser.add_argument("--version", action="version", version=f"agent-builder {VERSION}")
     args = parser.parse_args()
 
     try:
         if args.list_skills:
             list_skills()
+            return
+
+        if args.list_mcp:
+            list_mcp_servers()
             return
 
         if not args.config or not args.output:
@@ -206,9 +278,6 @@ def main():
     except Exception as e:
         print(f"未知错误: {e}", file=sys.stderr)
         sys.exit(3)
-
-    config = ProjectConfig.from_yaml(args.config)
-    generate_project(config, args.output)
 
 
 if __name__ == "__main__":

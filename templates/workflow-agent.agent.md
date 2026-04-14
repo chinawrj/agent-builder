@@ -16,6 +16,12 @@ description: "{{PROJECT_NAME}} 开发工作流 Agent - 驱动每日迭代开发"
 
 {{SKILLS_LIST}}
 
+## MCP Servers
+
+以下 MCP servers 已配置在 `.vscode/mcp.json` 中，可在开发过程中直接使用：
+
+{{MCP_SERVERS_LIST}}
+
 ## 验收标准
 
 {{ACCEPTANCE_CRITERIA}}

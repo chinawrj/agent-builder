@@ -28,6 +28,9 @@ class ProjectConfig:
     # 选中的 skills
     skills: list[str] = field(default_factory=list)
 
+    # 选中的 MCP servers
+    mcp_servers: list[str] = field(default_factory=list)
+
     # 验收标准
     acceptance_criteria: list[str] = field(default_factory=list)
 
@@ -48,6 +51,12 @@ class ProjectConfig:
             unknown = set(self.skills) - set(SKILL_CATALOG.keys())
             if unknown:
                 raise ValueError(f"未知的 skill: {', '.join(sorted(unknown))}")
+
+        # 验证 MCP servers 是否在目录中
+        if self.mcp_servers:
+            unknown_mcp = set(self.mcp_servers) - set(MCP_SERVER_CATALOG.keys())
+            if unknown_mcp:
+                raise ValueError(f"未知的 MCP server: {', '.join(sorted(unknown_mcp))}")
 
         # 验证 milestones 格式
         for i, m in enumerate(self.milestones):
@@ -145,6 +154,32 @@ SKILL_CATALOG = {
 }
 
 
+# 可用 MCP servers 及其配置
+MCP_SERVER_CATALOG = {
+    "espressif-docs": {
+        "category": "documentation",
+        "description": "搜索 Espressif 官方文档，获取 ESP-IDF、ESP32 等产品技术资料",
+        "tags": ["esp32", "esp-idf", "documentation", "espressif"],
+        "mcp_key": "espressif-documentation",
+        "url": "https://mcp.espressif.com/docs",
+    },
+    "esp-component-registry": {
+        "category": "components",
+        "description": "搜索 ESP 组件注册表中的组件和示例代码",
+        "tags": ["esp32", "components", "registry", "examples"],
+        "mcp_key": "esp-component-registry",
+        "url": "https://components.espressif.com/mcp",
+    },
+    "esp-rainmaker": {
+        "category": "cloud",
+        "description": "与 Espressif Rainmaker 云服务交互（设备管理、OTA 等）",
+        "tags": ["rainmaker", "cloud", "iot", "ota", "espressif"],
+        "mcp_key": "rainmaker",
+        "url": "https://mcp.rainmaker.espressif.com/api/mcp",
+    },
+}
+
+
 def recommend_skills(config: ProjectConfig) -> list[str]:
     """根据项目配置推荐 skills"""
     recommended = ["environment-setup"]  # 环境检查总是需要
@@ -176,3 +211,31 @@ def recommend_skills(config: ProjectConfig) -> list[str]:
             result.append(s)
 
     return result
+
+
+def recommend_mcp_servers(config: ProjectConfig) -> list[str]:
+    """根据项目配置推荐 MCP servers"""
+    recommended = []
+
+    # ESP32 项目推荐文档和组件库
+    if config.target_hardware.startswith("esp32"):
+        recommended.extend(["espressif-docs", "esp-component-registry"])
+
+    # 检查是否涉及云服务/Rainmaker
+    has_cloud = any(
+        kw in " ".join(config.features).lower()
+        for kw in ["rainmaker", "cloud", "ota", "远程", "remote", "设备管理"]
+    )
+    if has_cloud:
+        recommended.append("esp-rainmaker")
+
+    # 去重并保持顺序
+    seen = set()
+    result = []
+    for s in recommended:
+        if s not in seen:
+            seen.add(s)
+            result.append(s)
+
+    return result
+

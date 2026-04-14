@@ -23,6 +23,10 @@ skills:
   - "automated-testing"
   - "code-refactoring"
 
+mcp_servers:
+  - "espressif-docs"
+  - "esp-component-registry"
+
 acceptance_criteria:
   - "浏览器打开设备 IP 后能看到实时 MJPEG 视频流"
   - "页面同时显示当前温度（°C）和湿度（%）数据"
