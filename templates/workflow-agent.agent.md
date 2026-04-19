@@ -50,6 +50,33 @@ description: "{{PROJECT_NAME}} 开发工作流 Agent - 驱动每日迭代开发"
 
 ### 开发工具使用
 
+#### Python 环境（强制）
+
+项目中所有 Python 操作 **必须** 使用项目根目录下的 `.venv/` 虚拟环境。
+
+```bash
+# 首次初始化（项目开始时执行一次）
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt  # 如有
+
+# 每次开发前激活
+source .venv/bin/activate
+
+# 安装依赖（必须在 venv 中）
+pip install <package>
+
+# 运行 Python 脚本（必须在 venv 中）
+python3 tools/xxx.py
+```
+
+**规则：**
+- ⛔ **禁止** 使用系统 Python 或 `--break-system-packages` 安装包
+- ⛔ **禁止** 使用项目目录外的 venv（如 `~/patchright-env/`）
+- ✅ 所有 `pip install` 必须在 `.venv/` 激活状态下执行
+- ✅ `.venv/` 已加入 `.gitignore`，不提交到仓库
+- ✅ 所有 Python 依赖记录到 `requirements.txt`
+
 #### tmux 环境
 ```bash
 # 启动项目工作环境

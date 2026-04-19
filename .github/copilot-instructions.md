@@ -13,6 +13,7 @@
 4. 所有 skill 文件必须遵循 `SKILL.md` 格式规范（见 `docs/SKILL_DEVELOPMENT.md`）
 5. Agent 文件必须遵循 `.agent.md` 格式规范
 6. 每个 Skill **必须包含 Self-Test 和 Blind Test** 章节
+7. 所有 Python 操作必须使用项目根目录下 `.venv/` 虚拟环境，禁止使用系统 Python 安装包
 
 ## Skill 编写规范
 
