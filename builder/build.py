@@ -14,6 +14,17 @@ BUILDER_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKILLS_DIR = os.path.join(BUILDER_ROOT, "skills")
 TEMPLATES_DIR = os.path.join(BUILDER_ROOT, "templates")
 
+# 生成结果必须包含的章节（agent 文件验证清单）
+REQUIRED_AGENT_SECTIONS = [
+    ("Python 环境", "python.*venv|Python Environment|Python 环境"),
+    ("代码质量要求", "Code Quality Requirements|代码质量要求"),
+    ("重构策略", "Code Refactoring Strategy|重构策略"),
+    ("测试要求", "Test Requirements|测试要求"),
+    ("硬件假设", "Hardware Assumptions|硬件假设"),
+    ("禁止事项", "Things to Avoid|禁止事项"),
+    ("Skill 反馈", "Skill Feedback|Skill 反馈"),
+]
+
 
 def copy_skills(skill_names: list[str], output_dir: str, dry_run: bool = False):
     """复制选中的 skills 到输出目录"""
@@ -125,6 +136,92 @@ def build_variables(config: ProjectConfig) -> dict:
     }
 
 
+def validate_generated_agent(agent_path: str) -> tuple[list[str], list[str]]:
+    """验证生成的 agent 文件是否包含所有必需章节。
+    
+    Returns:
+        (passed, failed) — 通过和缺失的章节名列表
+    """
+    if not os.path.isfile(agent_path):
+        return [], [name for name, _ in REQUIRED_AGENT_SECTIONS]
+
+    with open(agent_path) as f:
+        content = f.read()
+
+    passed = []
+    failed = []
+    for section_name, pattern in REQUIRED_AGENT_SECTIONS:
+        if re.search(pattern, content, re.IGNORECASE):
+            passed.append(section_name)
+        else:
+            failed.append(section_name)
+    return passed, failed
+
+
+def validate_generated_files(output_dir: str) -> tuple[int, int]:
+    """验证生成的所有文件完整性。
+    
+    Returns:
+        (total_pass, total_fail) 计数
+    """
+    total_pass = 0
+    total_fail = 0
+
+    # 检查必需文件存在
+    required_files = [
+        "agents/dev-workflow.agent.md",
+        "requirements.md",
+        "daily-plan.md",
+        "docs/skill-feedback.md",
+    ]
+    for rel_path in required_files:
+        full_path = os.path.join(output_dir, rel_path)
+        if os.path.isfile(full_path):
+            print(f"  ✓ 文件存在: {rel_path}")
+            total_pass += 1
+        else:
+            print(f"  ✗ 文件缺失: {rel_path}")
+            total_fail += 1
+
+    # 检查 skills 目录
+    skills_dir = os.path.join(output_dir, "skills")
+    if os.path.isdir(skills_dir):
+        skill_count = len([d for d in os.listdir(skills_dir)
+                          if os.path.isdir(os.path.join(skills_dir, d)) and not d.startswith("_")])
+        if skill_count > 0:
+            print(f"  ✓ Skills 目录: {skill_count} 个 skills")
+            total_pass += 1
+        else:
+            print(f"  ✗ Skills 目录为空")
+            total_fail += 1
+    else:
+        print(f"  ✗ Skills 目录不存在")
+        total_fail += 1
+
+    # 验证 agent 文件必需章节
+    agent_path = os.path.join(output_dir, "agents", "dev-workflow.agent.md")
+    passed, failed = validate_generated_agent(agent_path)
+    for name in passed:
+        print(f"  ✓ Agent 章节: {name}")
+        total_pass += 1
+    for name in failed:
+        print(f"  ✗ Agent 缺失章节: {name}")
+        total_fail += 1
+
+    # 检查未替换的模板变量
+    for rel_path in required_files:
+        full_path = os.path.join(output_dir, rel_path)
+        if os.path.isfile(full_path):
+            with open(full_path) as f:
+                content = f.read()
+            unreplaced = re.findall(r"\{\{(\w+)\}\}", content)
+            if unreplaced:
+                print(f"  ✗ {rel_path} 含未替换变量: {', '.join(unreplaced)}")
+                total_fail += 1
+
+    return total_pass, total_fail
+
+
 def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = False):
     """生成完整的 agent 项目"""
     output_dir = os.path.abspath(output_dir)
@@ -138,7 +235,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
         os.makedirs(output_dir, exist_ok=True)
 
     # 1. 复制 Skills
-    print("[1/6] 复制 Skills...")
+    print("[1/7] 复制 Skills...")
     if not config.skills:
         config.skills = recommend_skills(config)
         print(f"  (自动推荐 {len(config.skills)} 个 skills)")
@@ -146,7 +243,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 2. 生成 MCP 配置
-    print("[2/6] 生成 MCP 配置...")
+    print("[2/7] 生成 MCP 配置...")
     if not config.mcp_servers:
         config.mcp_servers = recommend_mcp_servers(config)
         if config.mcp_servers:
@@ -160,8 +257,8 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     # 3. 构建模板变量
     variables = build_variables(config)
 
-    # 4. 生成工作流 Agent
-    print("[3/6] 生成工作流 Agent...")
+    # 3. 生成工作流 Agent
+    print("[3/7] 生成工作流 Agent...")
     agent_content = render_template("workflow-agent.agent.md", variables)
     agent_path = os.path.join(output_dir, "agents", "dev-workflow.agent.md")
     if not dry_run:
@@ -172,7 +269,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 4. 生成需求文档
-    print("[4/6] 生成需求文档...")
+    print("[4/7] 生成需求文档...")
     req_content = render_template("requirements.md", variables)
     req_path = os.path.join(output_dir, "requirements.md")
     if not dry_run:
@@ -182,7 +279,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 5. 生成每日计划模板
-    print("[5/6] 生成每日计划模板...")
+    print("[5/7] 生成每日计划模板...")
     plan_content = render_template("daily-plan.md", variables)
     plan_path = os.path.join(output_dir, "daily-plan.md")
     if not dry_run:
@@ -192,7 +289,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 6. 生成 Skill 反馈文件
-    print("[6/6] 生成 Skill 反馈文件...")
+    print("[6/7] 生成 Skill 反馈文件...")
     feedback_content = render_template("skill-feedback.md", variables)
     feedback_path = os.path.join(output_dir, "docs", "skill-feedback.md")
     if not dry_run:
@@ -202,9 +299,27 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print(f"  ✓ docs/skill-feedback.md")
     print()
 
+    # 7. 验证生成结果
+    print("[7/7] 验证生成结果...")
+    if not dry_run:
+        v_pass, v_fail = validate_generated_files(output_dir)
+        print()
+        if v_fail > 0:
+            print(f"  ⚠ 验证结果: {v_pass} 通过, {v_fail} 失败")
+            print(f"  请检查模板或配置是否完整！")
+        else:
+            print(f"  ✅ 验证全部通过 ({v_pass} 项)")
+    else:
+        print("  (dry-run 模式跳过验证)")
+    print()
+
     print("=" * 50)
     print(f"{mode}Agent 项目已生成到: {output_dir}")
     print(f"包含 {len(config.skills)} 个 skills | builder v{VERSION}")
+
+    if not dry_run and v_fail > 0:
+        return False
+    return True
 
 
 def list_skills():
@@ -278,7 +393,10 @@ def main():
             parser.error("--config 和 --output 为必填项（除非使用 --list-skills）")
 
         config = ProjectConfig.from_yaml(args.config)
-        generate_project(config, args.output, dry_run=args.dry_run)
+        success = generate_project(config, args.output, dry_run=args.dry_run)
+        if not success:
+            print("\n⚠ 生成完成但验证未全部通过，请检查上方输出!", file=sys.stderr)
+            sys.exit(4)
 
     except FileNotFoundError as e:
         print(f"错误: {e}", file=sys.stderr)
