@@ -46,6 +46,7 @@ description: "{{PROJECT_NAME}} 开发工作流 Agent - 驱动每日迭代开发"
    - 记录完成情况
    - 更新进度指标
    - 规划明日工作
+   - **记录 Skill/工作流反馈** — 见下方「Skill 反馈」章节
 
 ### 开发工具使用
 
@@ -98,3 +99,37 @@ chore: 构建/工具变更
 - 小步提交，每个功能点一个 commit
 - 遇到阻塞时记录并尝试替代方案
 - 定期检查内存使用（嵌入式环境限制）
+
+## Skill 反馈 (Feedback Loop)
+
+在每日开发过程中，将遇到的 skill/工作流问题或改进建议记录到 **`docs/skill-feedback.md`**。
+
+### 何时记录
+
+- 某个 Skill 的步骤不完整或有误
+- 某个 Skill 缺少关键信息（如缺少错误处理、缺少边界情况）
+- 工作流程中发现可以优化的环节
+- 发现需要但不存在的 Skill
+- 某个工具或命令的用法与 Skill 描述不一致
+
+### 记录格式
+
+在 `docs/skill-feedback.md` 末尾追加：
+
+```markdown
+### FB-NNN (YYYY-MM-DD)
+- **Skill**: <skill-name 或 workflow/agent/tools>
+- **Category**: <bug | improvement | missing-feature | documentation>
+- **Summary**: <一句话总结>
+- **Detail**: <详细描述问题和上下文>
+- **Workaround**: <如有，描述临时解决方案>
+- **Priority**: <high | medium | low>
+```
+
+### 规则
+
+- 编号递增（FB-001, FB-002, ...）
+- 每条反馈必须有具体的 Skill 名称或模块
+- **不要删除**已有的反馈条目
+- 每日结束时确认是否有新的反馈需要记录
+- 反馈随每日 wrap-up commit 一起提交

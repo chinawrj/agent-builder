@@ -138,7 +138,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
         os.makedirs(output_dir, exist_ok=True)
 
     # 1. 复制 Skills
-    print("[1/5] 复制 Skills...")
+    print("[1/6] 复制 Skills...")
     if not config.skills:
         config.skills = recommend_skills(config)
         print(f"  (自动推荐 {len(config.skills)} 个 skills)")
@@ -146,7 +146,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 2. 生成 MCP 配置
-    print("[2/5] 生成 MCP 配置...")
+    print("[2/6] 生成 MCP 配置...")
     if not config.mcp_servers:
         config.mcp_servers = recommend_mcp_servers(config)
         if config.mcp_servers:
@@ -161,7 +161,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     variables = build_variables(config)
 
     # 4. 生成工作流 Agent
-    print("[3/5] 生成工作流 Agent...")
+    print("[3/6] 生成工作流 Agent...")
     agent_content = render_template("workflow-agent.agent.md", variables)
     agent_path = os.path.join(output_dir, "agents", "dev-workflow.agent.md")
     if not dry_run:
@@ -172,7 +172,7 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 4. 生成需求文档
-    print("[4/5] 生成需求文档...")
+    print("[4/6] 生成需求文档...")
     req_content = render_template("requirements.md", variables)
     req_path = os.path.join(output_dir, "requirements.md")
     if not dry_run:
@@ -182,13 +182,24 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     print()
 
     # 5. 生成每日计划模板
-    print("[5/5] 生成每日计划模板...")
+    print("[5/6] 生成每日计划模板...")
     plan_content = render_template("daily-plan.md", variables)
     plan_path = os.path.join(output_dir, "daily-plan.md")
     if not dry_run:
         with open(plan_path, "w") as f:
             f.write(plan_content)
     print(f"  ✓ daily-plan.md")
+    print()
+
+    # 6. 生成 Skill 反馈文件
+    print("[6/6] 生成 Skill 反馈文件...")
+    feedback_content = render_template("skill-feedback.md", variables)
+    feedback_path = os.path.join(output_dir, "docs", "skill-feedback.md")
+    if not dry_run:
+        os.makedirs(os.path.dirname(feedback_path), exist_ok=True)
+        with open(feedback_path, "w") as f:
+            f.write(feedback_content)
+    print(f"  ✓ docs/skill-feedback.md")
     print()
 
     print("=" * 50)
