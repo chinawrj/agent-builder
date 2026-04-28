@@ -38,7 +38,7 @@ else
 fi
 
 # --- Test 3: Agent 包含所有必需章节 ---
-AGENT_FILE="$TMP/out/agents/dev-workflow.agent.md"
+AGENT_FILE="$TMP/out/.github/agents/dev-workflow.agent.md"
 if [ -f "$AGENT_FILE" ]; then
   ALL_FOUND=true
   for section in "Python" "代码质量要求|Code Quality" "重构策略|Code Refactoring" "测试要求|Test Requirements" "硬件假设|Hardware Assumptions" "禁止事项|Things to Avoid" "Skill 反馈|Skill Feedback"; do
@@ -71,7 +71,7 @@ fi
 
 # --- Test 5: 必需文件全部生成 ---
 ALL_FILES=true
-for f in "agents/dev-workflow.agent.md" "requirements.md" "daily-plan.md" "docs/skill-feedback.md"; do
+for f in ".github/agents/dev-workflow.agent.md" ".copilot/requirements.md" ".copilot/daily-plan.md" ".copilot/docs/skill-feedback.md"; do
   if [ ! -f "$TMP/out/$f" ]; then
     ALL_FILES=false
     break
@@ -84,7 +84,7 @@ else
 fi
 
 # --- Test 6: Skills 目录包含 skills ---
-SKILL_COUNT=$(find "$TMP/out/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+SKILL_COUNT=$(find "$TMP/out/.github/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 if [ "$SKILL_COUNT" -gt 0 ]; then
   test_pass "skills_copied ($SKILL_COUNT skills)"
 else
@@ -94,11 +94,11 @@ fi
 # --- Test 7: validate_generated_agent 检测缺失章节 ---
 if [ -f "$AGENT_FILE" ]; then
   BROKEN=$(mktemp -d)
-  mkdir -p "$BROKEN/agents"
-  sed '/禁止事项/d' "$AGENT_FILE" > "$BROKEN/agents/dev-workflow.agent.md"
+  mkdir -p "$BROKEN/.github/agents"
+  sed '/禁止事项/d' "$AGENT_FILE" > "$BROKEN/.github/agents/dev-workflow.agent.md"
   RESULT=$(cd "$BUILDER_ROOT" && python3 -c "
 from builder.build import validate_generated_agent
-p, f = validate_generated_agent('$BROKEN/agents/dev-workflow.agent.md')
+p, f = validate_generated_agent('$BROKEN/.github/agents/dev-workflow.agent.md')
 for name in f:
     print('missing: ' + name)
 " 2>&1)

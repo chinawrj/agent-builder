@@ -36,14 +36,19 @@ agents:
 确认后，生成以下文件到目标目录：
 
 ```
-<target>/.copilot/
-├── agents/
-│   └── dev-workflow.agent.md    # 开发工作流 Agent
-├── skills/                       # 选中的 skills（从库中复制）
-│   └── ...
-├── requirements.md              # 项目需求文档
-├── daily-plan.md                # 每日迭代计划
-└── copilot-instructions.md      # 项目级 AI 指令
+<target>/
+├── .github/
+│   ├── agents/
+│   │   └── dev-workflow.agent.md    # 开发工作流 Agent
+│   └── skills/                       # 选中的 skills（从库中复制）
+│       └── ...
+├── .vscode/
+│   └── mcp.json                     # MCP servers 配置
+└── .copilot/
+    ├── requirements.md              # 项目需求文档
+    ├── daily-plan.md                # 每日迭代计划
+    └── docs/
+        └── skill-feedback.md        # Skill 反馈记录
 ```
 
 ## 可用 Skills

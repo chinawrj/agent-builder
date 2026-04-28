@@ -1,0 +1,55 @@
+# ESP32 QEMU LVGL Demo 项目配置
+name: "esp32-display-qemu-demo"
+description: "使用 ESP32 官方 QEMU 模拟器运行 LVGL UI 示例，无需真实硬件即可开发和验证显示界面"
+target_hardware: "esp32-qemu"
+framework: "esp-idf"
+dev_os: "macos"
+
+features:
+  - "在 QEMU 模拟器中编译并运行 LVGL sample 应用"
+  - "ESP-IDF + LVGL 组件集成（通过 idf-component-manager）"
+  - "QEMU 启动配置（qemu-system-xtensa，framebuffer 模拟）"
+  - "通过 tmux 管理编译窗口和 QEMU 运行窗口"
+  - "LVGL 渲染验证（日志输出 + framebuffer 截图）"
+
+skills:
+  - "tmux-multi-shell"
+  - "esp32-build-flash"
+  - "environment-setup"
+  - "project-scaffolding"
+  - "daily-iteration"
+  - "automated-testing"
+  - "code-refactoring"
+
+mcp_servers:
+  - "espressif-docs"
+  - "esp-component-registry"
+
+acceptance_criteria:
+  - "idf.py build 编译成功，零警告"
+  - "QEMU 成功启动并输出 LVGL 初始化日志"
+  - "LVGL demo 页面在 QEMU 中正常渲染（至少 1 秒稳定输出）"
+  - "不需要真实 ESP32 硬件即可完整运行验证流程"
+  - "tmux 会话正常管理编译与 QEMU 窗口"
+
+milestones:
+  - name: "M1 - 环境准备"
+    description: |
+      验证 ESP-IDF 环境、QEMU（qemu-system-xtensa）安装就绪。
+      创建最简 ESP-IDF Hello World 项目并在 QEMU 中成功运行。
+  - name: "M2 - LVGL 集成"
+    description: |
+      通过 idf-component-manager 添加 lvgl/lvgl 组件。
+      配置 sdkconfig 启用 LVGL 和虚拟显示驱动（lv_port_disp）。
+      编译通过，LVGL 初始化日志正常输出。
+  - name: "M3 - LVGL Demo 运行"
+    description: |
+      运行 LVGL 官方 demo（lv_demo_widgets 或 lv_demo_benchmark）。
+      在 QEMU 中验证渲染输出（日志 + framebuffer）。
+      完善 tmux 启动脚本，一键启动开发环境。
+  - name: "M4 - 测试与文档"
+    description: |
+      编写自动化测试：启动 QEMU、等待 LVGL 初始化日志、判断 pass/fail。
+      代码重构，补充 README，记录 QEMU 启动参数和注意事项。
+
+output_dir: "/Users/rjwang/fun/esp32-display-qemu-demo"

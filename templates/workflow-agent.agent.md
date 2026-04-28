@@ -77,24 +77,40 @@ python3 tools/xxx.py
 - ✅ `.venv/` 已加入 `.gitignore`，不提交到仓库
 - ✅ 所有 Python 依赖记录到 `requirements.txt`
 
-#### tmux 环境
+#### tmux 环境（强制）
+
+所有编译、烧录、串口监控操作 **必须** 通过 tmux 窗口执行，**禁止** 直接在当前 shell 中运行这些命令。
+
+详细操作规范见 `.github/skills/tmux-multi-shell/SKILL.md`。
+
+**规则：**
+- ⛔ **禁止** 直接运行 `idf.py build / flash / monitor`（不经过 tmux）
+- ⛔ **禁止** 在当前 shell 阻塞等待编译或烧录完成
+- ✅ 所有编译、烧录、串口命令必须通过 `tmux send-keys` 发送到对应窗口
+- ✅ 通过 sentinel 机制检测命令完成（见 skill）
+- ✅ Agent 重启后必须先检查会话是否存在（幂等创建）
+
 ```bash
-# 启动项目工作环境
-tmux new-session -d -s {{PROJECT_NAME}}
-tmux new-window -t {{PROJECT_NAME}} -n build
-tmux new-window -t {{PROJECT_NAME}} -n flash
-tmux new-window -t {{PROJECT_NAME}} -n monitor
+# 幂等创建项目 tmux 会话
+tmux has-session -t {{PROJECT_NAME}} 2>/dev/null || {
+  tmux new-session -d -s {{PROJECT_NAME}}
+  tmux rename-window -t {{PROJECT_NAME}}:0 'edit'
+  tmux new-window -t {{PROJECT_NAME}} -n 'build'
+  tmux new-window -t {{PROJECT_NAME}} -n 'flash'
+  tmux new-window -t {{PROJECT_NAME}} -n 'monitor'
+}
 ```
 
 #### 编译-烧录-测试循环
+
 ```bash
-# 1. 编译
+# 1. 编译（在 build 窗口）
 tmux send-keys -t {{PROJECT_NAME}}:build 'idf.py build' C-m
 
-# 2. 烧录
+# 2. 烧录（在 flash 窗口）
 tmux send-keys -t {{PROJECT_NAME}}:flash 'idf.py -p /dev/ttyUSB0 flash' C-m
 
-# 3. 监控
+# 3. 监控（在 monitor 窗口）
 tmux send-keys -t {{PROJECT_NAME}}:monitor 'idf.py -p /dev/ttyUSB0 monitor' C-m
 ```
 
@@ -160,6 +176,7 @@ chore: 构建/工具变更
 - ❌ 不要忽略编译警告
 - ❌ 不要在中断处理函数中执行复杂操作
 - ❌ 不要在未经用户确认的情况下假设硬件不可用
+- ❌ 不要绕过 tmux 直接执行编译、烧录、串口监控命令
 
 ## Skill 反馈 (Feedback Loop)
 

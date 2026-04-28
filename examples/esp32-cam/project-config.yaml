@@ -53,4 +53,4 @@ milestones:
       完成自动化测试套件，进行稳定性测试和性能优化，
       代码重构，完善文档。
 
-output_dir: "./examples/esp32-cam/output"
+output_dir: "./examples/esp32-cam/output-project"

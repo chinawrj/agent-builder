@@ -26,11 +26,11 @@ tags: [builder, validation, meta, testing]
 Builder 生成的项目必须通过以下验证：
 
 ### 文件完整性
-- [ ] `agents/dev-workflow.agent.md` 存在
-- [ ] `requirements.md` 存在
-- [ ] `daily-plan.md` 存在
-- [ ] `docs/skill-feedback.md` 存在
-- [ ] `skills/` 目录包含选中的 skills
+- [ ] `.github/agents/dev-workflow.agent.md` 存在
+- [ ] `.copilot/requirements.md` 存在
+- [ ] `.copilot/daily-plan.md` 存在
+- [ ] `.copilot/docs/skill-feedback.md` 存在
+- [ ] `.github/skills/` 目录包含选中的 skills
 
 ### Agent 必需章节
 - [ ] Python 环境（`.venv/` 规则）

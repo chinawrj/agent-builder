@@ -17,6 +17,7 @@ TEMPLATES_DIR = os.path.join(BUILDER_ROOT, "templates")
 # 生成结果必须包含的章节（agent 文件验证清单）
 REQUIRED_AGENT_SECTIONS = [
     ("Python 环境", "python.*venv|Python Environment|Python 环境"),
+    ("tmux 强制要求", "tmux.*强制|禁止.*tmux|tmux.*禁止|tmux 环境"),
     ("代码质量要求", "Code Quality Requirements|代码质量要求"),
     ("重构策略", "Code Refactoring Strategy|重构策略"),
     ("测试要求", "Test Requirements|测试要求"),
@@ -28,7 +29,7 @@ REQUIRED_AGENT_SECTIONS = [
 
 def copy_skills(skill_names: list[str], output_dir: str, dry_run: bool = False):
     """复制选中的 skills 到输出目录"""
-    skills_out = os.path.join(output_dir, "skills")
+    skills_out = os.path.join(output_dir, ".github", "skills")
     missing = []
 
     for name in skill_names:
@@ -169,10 +170,10 @@ def validate_generated_files(output_dir: str) -> tuple[int, int]:
 
     # 检查必需文件存在
     required_files = [
-        "agents/dev-workflow.agent.md",
-        "requirements.md",
-        "daily-plan.md",
-        "docs/skill-feedback.md",
+        ".github/agents/dev-workflow.agent.md",
+        ".copilot/requirements.md",
+        ".copilot/daily-plan.md",
+        ".copilot/docs/skill-feedback.md",
     ]
     for rel_path in required_files:
         full_path = os.path.join(output_dir, rel_path)
@@ -184,7 +185,7 @@ def validate_generated_files(output_dir: str) -> tuple[int, int]:
             total_fail += 1
 
     # 检查 skills 目录
-    skills_dir = os.path.join(output_dir, "skills")
+    skills_dir = os.path.join(output_dir, ".github", "skills")
     if os.path.isdir(skills_dir):
         skill_count = len([d for d in os.listdir(skills_dir)
                           if os.path.isdir(os.path.join(skills_dir, d)) and not d.startswith("_")])
@@ -199,7 +200,7 @@ def validate_generated_files(output_dir: str) -> tuple[int, int]:
         total_fail += 1
 
     # 验证 agent 文件必需章节
-    agent_path = os.path.join(output_dir, "agents", "dev-workflow.agent.md")
+    agent_path = os.path.join(output_dir, ".github", "agents", "dev-workflow.agent.md")
     passed, failed = validate_generated_agent(agent_path)
     for name in passed:
         print(f"  ✓ Agent 章节: {name}")
@@ -239,6 +240,12 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     if not config.skills:
         config.skills = recommend_skills(config)
         print(f"  (自动推荐 {len(config.skills)} 个 skills)")
+
+    # tmux-multi-shell 始终强制包含
+    if "tmux-multi-shell" not in config.skills:
+        config.skills.insert(0, "tmux-multi-shell")
+        print("  (自动注入 tmux-multi-shell — 必选 skill)")
+
     copy_skills(config.skills, output_dir, dry_run=dry_run)
     print()
 
@@ -260,43 +267,45 @@ def generate_project(config: ProjectConfig, output_dir: str, dry_run: bool = Fal
     # 3. 生成工作流 Agent
     print("[3/7] 生成工作流 Agent...")
     agent_content = render_template("workflow-agent.agent.md", variables)
-    agent_path = os.path.join(output_dir, "agents", "dev-workflow.agent.md")
+    agent_path = os.path.join(output_dir, ".github", "agents", "dev-workflow.agent.md")
     if not dry_run:
         os.makedirs(os.path.dirname(agent_path), exist_ok=True)
         with open(agent_path, "w") as f:
             f.write(agent_content)
-    print(f"  ✓ agents/dev-workflow.agent.md")
+    print(f"  ✓ .github/agents/dev-workflow.agent.md")
     print()
 
     # 4. 生成需求文档
     print("[4/7] 生成需求文档...")
     req_content = render_template("requirements.md", variables)
-    req_path = os.path.join(output_dir, "requirements.md")
+    req_path = os.path.join(output_dir, ".copilot", "requirements.md")
     if not dry_run:
+        os.makedirs(os.path.dirname(req_path), exist_ok=True)
         with open(req_path, "w") as f:
             f.write(req_content)
-    print(f"  ✓ requirements.md")
+    print(f"  ✓ .copilot/requirements.md")
     print()
 
     # 5. 生成每日计划模板
     print("[5/7] 生成每日计划模板...")
     plan_content = render_template("daily-plan.md", variables)
-    plan_path = os.path.join(output_dir, "daily-plan.md")
+    plan_path = os.path.join(output_dir, ".copilot", "daily-plan.md")
     if not dry_run:
+        os.makedirs(os.path.dirname(plan_path), exist_ok=True)
         with open(plan_path, "w") as f:
             f.write(plan_content)
-    print(f"  ✓ daily-plan.md")
+    print(f"  ✓ .copilot/daily-plan.md")
     print()
 
     # 6. 生成 Skill 反馈文件
     print("[6/7] 生成 Skill 反馈文件...")
     feedback_content = render_template("skill-feedback.md", variables)
-    feedback_path = os.path.join(output_dir, "docs", "skill-feedback.md")
+    feedback_path = os.path.join(output_dir, ".copilot", "docs", "skill-feedback.md")
     if not dry_run:
         os.makedirs(os.path.dirname(feedback_path), exist_ok=True)
         with open(feedback_path, "w") as f:
             f.write(feedback_content)
-    print(f"  ✓ docs/skill-feedback.md")
+    print(f"  ✓ .copilot/docs/skill-feedback.md")
     print()
 
     # 7. 验证生成结果

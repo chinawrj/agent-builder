@@ -182,7 +182,7 @@ MCP_SERVER_CATALOG = {
 
 def recommend_skills(config: ProjectConfig) -> list[str]:
     """根据项目配置推荐 skills"""
-    recommended = ["environment-setup"]  # 环境检查总是需要
+    recommended = ["environment-setup", "tmux-multi-shell"]  # 环境检查和 tmux 总是需要
 
     # 嵌入式项目基础 skills
     if config.target_hardware.startswith("esp32"):
