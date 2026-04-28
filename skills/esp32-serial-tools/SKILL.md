@@ -1,3 +1,8 @@
+---
+name: esp32-serial-tools
+description: ESP32 串口通信与日志监控工具。Use when monitoring serial output from an ESP32 device, capturing logs, diagnosing runtime issues via UART, or automating serial-based test verification.
+---
+
 # Skill: ESP32 串口工具
 
 ## 用途

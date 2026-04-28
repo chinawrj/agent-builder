@@ -1,3 +1,8 @@
+---
+name: automated-testing
+description: 嵌入式项目自动化测试策略，结合串口验证和 Web UI 验证实现端到端测试。Use when setting up or running automated tests, validating serial output, testing Web UI behavior, or defining test acceptance criteria.
+---
+
 # Skill: 自动化测试
 
 ## 用途

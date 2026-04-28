@@ -1,3 +1,8 @@
+---
+name: tmux-multi-shell
+description: tmux 多终端管理，为 AI Agent 提供可靠的多终端自动化能力。Use when you need to run multiple terminal tasks in parallel (build, flash, serial monitor), need persistent terminal sessions, or need to send commands and reliably capture their output and exit codes.
+---
+
 # Skill: tmux 多终端管理（AI Agent 优化版）
 
 ## 用途

@@ -1,3 +1,8 @@
+---
+name: web-page-inspector
+description: Web 页面内容检查与数据提取。Use when you need to read content from a web page, extract structured data, verify page content correctness, or fetch information displayed in a browser.
+---
+
 # Skill: Web 页面检查与数据提取
 
 ## 用途

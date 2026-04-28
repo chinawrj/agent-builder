@@ -1,3 +1,8 @@
+---
+name: board-pinout-reference
+description: 开发板引脚定义（Pinout）与核心模组资源速查。Use when you need to look up GPIO pin assignments, peripheral mappings, or hardware resource constraints for ESP32 and related development boards.
+---
+
 # Skill: 开发板引脚与资源速查
 
 ## 用途

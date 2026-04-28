@@ -1,3 +1,8 @@
+---
+name: esp32-build-flash
+description: ESP-IDF 项目编译、配置和烧录工作流。Use when building, configuring (menuconfig), or flashing an ESP-IDF project to an ESP32 device or QEMU emulator.
+---
+
 # Skill: ESP32 编译与烧录
 
 ## 用途

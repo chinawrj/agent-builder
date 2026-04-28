@@ -1,3 +1,8 @@
+---
+name: code-refactoring
+description: 周期性代码重构策略，根据代码健康指标自适应触发重构。Use when code quality metrics exceed thresholds (file too large, too many warnings, duplicate code, excessive TODOs), or when planning a refactoring day.
+---
+
 # Skill: 代码重构策略
 
 ## 用途

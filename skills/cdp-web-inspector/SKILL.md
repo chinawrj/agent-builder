@@ -1,3 +1,8 @@
+---
+name: cdp-web-inspector
+description: 使用 Chrome DevTools Protocol (CDP) 进行浏览器自动化和 Web UI 检查。Use when you need to automate browser interactions, inspect web page content, validate UI rendering, or scrape data from a live web page.
+---
+
 # Skill: CDP 浏览器检查工具
 
 ## 用途

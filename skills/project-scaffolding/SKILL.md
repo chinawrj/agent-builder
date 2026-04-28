@@ -1,3 +1,8 @@
+---
+name: project-scaffolding
+description: 为目标项目生成初始目录结构、CMakeLists.txt、HTML 模板和基础源码框架。Use when initializing a new ESP-IDF project from scratch, creating the standard directory layout, or setting up a compilable Hello World starting point.
+---
+
 # Skill: 项目脚手架生成
 
 ## 用途

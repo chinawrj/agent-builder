@@ -1,3 +1,8 @@
+---
+name: daily-iteration
+description: 每日迭代开发工作流，包含晨会计划、执行开发和晚间回顾三个阶段。Use when starting a new development day, planning daily tasks, reviewing progress, or managing the daily development cycle.
+---
+
 # Skill: 每日迭代工作流
 
 ## 用途

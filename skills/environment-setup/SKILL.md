@@ -1,3 +1,8 @@
+---
+name: environment-setup
+description: 开发环境检查与配置，验证工具链、驱动和依赖是否就绪。Use when starting a project for the first time, after switching machines, after upgrading toolchains, or when diagnosing build environment issues.
+---
+
 # Skill: 开发环境检查与配置
 
 ## 用途
